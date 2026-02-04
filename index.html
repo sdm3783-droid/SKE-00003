@@ -3,60 +3,34 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE-00003 전사 통합 관리</title>
+    <title>SKE 전사 통합 관리</title>
     <style>
-        :root { --primary: #0f172a; --bg: #f1f5f9; --red: #ef4444; --orange: #f97316; --yellow: #facc15; --green: #10b981; --blue: #3b82f6; }
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 0; color: #000; margin: 0; }
+        :root { --primary: #0f172a; --bg: #f1f5f9; --blue: #3b82f6; --red: #ef4444; }
+        body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #000; }
         
-        /* 상단 메뉴바 */
-        .nav-bar { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
-        .nav-btn { flex: 1; padding: 15px 0; border: none; background: none; color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 14px; transition: 0.3s; }
+        /* 네비게이션 탭 */
+        .nav-bar { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 1000; }
+        .nav-btn { flex: 1; padding: 15px 0; border: none; background: none; color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 14px; }
         .nav-btn.active { color: white; border-bottom: 4px solid var(--blue); background: rgba(255,255,255,0.1); }
 
-        .container { max-width: 1450px; margin: auto; background: white; padding: 15px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 100vh; }
+        .container { max-width: 1400px; margin: auto; padding: 15px; background: white; min-height: 100vh; }
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        h2 { font-size: 1.2rem; margin: 10px 0 15px 0; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .input-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #ddd; }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+        input, select { padding: 12px; border: 1px solid #999; border-radius: 8px; width: 100%; box-sizing: border-box; font-size: 14px; }
+        .btn-save { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
 
-        /* 대시보드 & 입력폼 */
-        .dashboard-container { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; }
-        .dash-card { flex: 1 1 280px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; box-sizing: border-box; }
-        .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .st-btn { border: none; padding: 12px 5px; border-radius: 10px; cursor: pointer; text-align: center; font-weight: 800; }
-        
-        .input-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #ddd; }
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-        input, select { padding: 10px; border: 1px solid #999; border-radius: 6px; font-size: 14px; background: #fff; color: #000; width: 100%; box-sizing: border-box; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 15px; border-radius: 8px; font-weight: bold; width: 100%; margin-top: 10px; cursor: pointer; }
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        th { background: #f1f5f9; padding: 12px; border: 1px solid #ccc; font-size: 13px; }
+        td { padding: 12px; border: 1px solid #eee; text-align: center; font-size: 14px; font-weight: 500; }
 
-        /* 테이블 공통 */
-        .table-wrapper { overflow-x: auto; margin-top: 10px; }
-        table { width: 100%; border-collapse: collapse; min-width: 850px; }
-        th { background: #f8fafc; padding: 12px; font-size: 12px; border: 1px solid #ddd; color: #475569; }
-        td { padding: 14px 8px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; font-weight: 600; color: #000; }
-
-        /* 모바일 반응형 디자인 */
-        @media screen and (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; width: 100%; }
-            thead tr { position: absolute; top: -9999px; }
-            tr { border: 2px solid #ddd; border-radius: 12px; margin-bottom: 15px; padding: 10px; background: #fff !important; }
-            td { border: none !important; position: relative; padding: 10px 10px 10px 45% !important; text-align: right !important; border-bottom: 1px solid #f1f5f9 !important; display: block !important; }
-            td:before { position: absolute; left: 12px; font-weight: 900; color: #666; font-size: 12px; content: attr(data-label); text-align: left; }
+        @media (max-width: 768px) {
+            .input-grid { grid-template-columns: 1fr 1fr; }
+            td { font-size: 12px; padding: 8px; }
         }
-
-        /* 상태 색상 알림 */
-        .lvl-red { border-left: 8px solid var(--red) !important; background-color: #fff1f2 !important; }
-        .lvl-orange { border-left: 8px solid var(--orange) !important; background-color: #fff7ed !important; }
-        .lvl-yellow { border-left: 8px solid var(--yellow) !important; background-color: #fefce8 !important; }
-        
-        .badge { padding: 4px 8px; border-radius: 5px; font-size: 12px; font-weight: 900; border: 1px solid #333; }
-        .bg-in { background: #dcfce7; color: #166534; }
-        .bg-out { background: #fee2e2; color: #991b1b; }
-        
-        /* 팝업 모달 */
-        .modal { display: none; position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:3000; }
-        .modal-content { background:white; width:90%; max-width:450px; margin:40px auto; border-radius:12px; padding:20px; max-height:80vh; overflow-y:auto; }
     </style>
 </head>
 <body>
@@ -67,213 +41,111 @@
 </nav>
 
 <div class="container">
-
     <div id="page-stock" class="page-content active">
-        <h2>📊 실시간 재고 현황</h2>
-        <div id="stock-dashboard" class="dashboard-container"></div>
+        <h2>📊 통합 재고 현황</h2>
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="st-date">
-                <input type="text" id="st-parent" placeholder="상위 (CABLE 등)">
-                <input type="text" id="st-category" placeholder="상세분류">
                 <input type="text" id="st-item" placeholder="품목명">
                 <input type="text" id="st-spec" placeholder="규격">
-                <select id="st-type"><option value="초기">🚀 초기</option><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option></select>
-                <input type="number" id="st-qty" value="0">
+                <select id="st-type"><option value="입고">입고 (+)</option><option value="출고">출고 (-)</option></select>
+                <input type="number" id="st-qty" placeholder="수량">
             </div>
-            <button class="btn-add" onclick="addStock()">재고 기록 업데이트</button>
+            <button class="btn-save" onclick="saveData('stock')">재고 데이터 저장</button>
         </div>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>일자</th><th>상위</th><th>분류</th><th>품목(이력)</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
-                <tbody id="stock-table-body"></tbody>
+                <thead><tr><th>날짜</th><th>품목</th><th>규격</th><th>구분</th><th>수량</th><th>상태</th></tr></thead>
+                <tbody id="stock-body"></tbody>
             </table>
         </div>
     </div>
 
     <div id="page-materials" class="page-content">
-        <h2>🏗️ 사급자재 관리 (프로젝트별)</h2>
+        <h2>🏗️ 사급자재 현황 (SKE-0001 연동)</h2>
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="ma-date">
                 <input type="text" id="ma-project" placeholder="프로젝트명">
-                <input type="text" id="ma-vendor" placeholder="거래처">
                 <input type="text" id="ma-item" placeholder="자재명">
                 <input type="number" id="ma-req" placeholder="필요수량">
                 <input type="number" id="ma-recv" placeholder="입고수량">
-                <select id="ma-status"><option value="미입고">❌ 미입고</option><option value="부분입고">⚠️ 부분입고</option><option value="완료">✅ 완료</option></select>
             </div>
-            <button class="btn-add" onclick="addMaterial()">사급자재 현황 등록</button>
+            <button class="btn-save" onclick="saveData('material')">사급자재 데이터 저장</button>
         </div>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>일자</th><th>프로젝트</th><th>거래처</th><th>자재명</th><th>필요</th><th>입고</th><th>상태</th><th>관리</th></tr></thead>
-                <tbody id="ma-table-body"></tbody>
+                <thead><tr><th>날짜</th><th>프로젝트</th><th>자재명</th><th>필요수량</th><th>입고수량</th><th>상태</th></tr></thead>
+                <tbody id="ma-body"></tbody>
             </table>
         </div>
-    </div>
-
-</div>
-
-<div id="historyModal" class="modal" onclick="closeModal()">
-    <div class="modal-content" onclick="event.stopPropagation()">
-        <h3 id="modalTitle">데이터 이력</h3>
-        <div id="historyList"></div>
-        <button onclick="closeModal()" style="width:100%; padding:12px; margin-top:15px; background:#000; color:white; border:none; border-radius:6px; font-weight:bold;">닫기</button>
     </div>
 </div>
 
 <script>
-    // 🔗 데이터베이스 경로 (반드시 사용자님의 Firebase 주소와 일치해야 합니다)
-    const BASE_URL = "https://ske-00003-default-rtdb.firebaseio.com/";
-    const STOCK_DB = BASE_URL + "stock_management.json";
-    const MATERIAL_DB = BASE_URL + "sa-geup.json"; // 💡 사급자재 데이터 이름 (sa-geup.json)
-
-    let stockData = [];
-    let materialData = [];
+    // 🔗 알려주신 SKE-0001 주소로 정확히 연결합니다.
+    const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
+    const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/sa-geup.json"; 
 
     function showPage(page) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
         document.getElementById('btn-' + page).classList.add('active');
-        if(page === 'stock') loadStock(); else loadMaterials();
+        loadData(page);
     }
 
-    async function loadStock() {
+    async function loadData(type) {
+        const url = type === 'stock' ? STOCK_URL : MATERIAL_URL;
+        const bodyId = type === 'stock' ? 'stock-body' : 'ma-body';
+        const body = document.getElementById(bodyId);
+        
         try {
-            const res = await fetch(STOCK_DB);
+            const res = await fetch(url);
             const data = await res.json();
-            stockData = data ? Object.values(data) : [];
-            updateStockDashboard();
-            renderStock();
-        } catch(e) { console.error("Stock load error"); }
+            const list = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+            
+            body.innerHTML = list.reverse().map(item => `
+                <tr>
+                    <td>${item.date}</td>
+                    <td>${item.item || item.project}</td>
+                    <td>${item.spec || item.item}</td>
+                    <td>${item.type || (item.recv >= item.req ? '✅ 완료' : '⚠️ 미입고')}</td>
+                    <td>${(item.qty || item.recv).toLocaleString()}</td>
+                    <td>${type === 'stock' ? (item.qty < 3000 ? '🔴 부족' : '🟢 양호') : (item.recv >= item.req ? '✅ 완료' : '❌ 진행중')}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            body.innerHTML = `<tr><td colspan="6" style="color:red;">데이터 연결 실패 (주소 확인 필요)</td></tr>`;
+        }
     }
 
-    async function loadMaterials() {
-        try {
-            const res = await fetch(MATERIAL_DB);
-            const data = await res.json();
-            materialData = data ? Object.values(data) : [];
-            renderMaterials();
-        } catch(e) { console.error("Material load error"); }
+    async function saveData(type) {
+        const url = type === 'stock' ? STOCK_URL : MATERIAL_URL;
+        let item = { date: document.getElementById(type === 'stock' ? 'st-date' : 'ma-date').value, timestamp: Date.now() };
+        
+        if(type === 'stock') {
+            Object.assign(item, { item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value) });
+        } else {
+            Object.assign(item, { project: document.getElementById('ma-project').value, item: document.getElementById('ma-item').value, req: Number(document.getElementById('ma-req').value), recv: Number(document.getElementById('ma-recv').value) });
+        }
+
+        const res = await fetch(url);
+        const data = await res.json();
+        const currentList = data ? (Array.isArray(data) ? data : Object.values(data)) : [];
+        currentList.push(item);
+
+        await fetch(url, { method: 'PUT', body: JSON.stringify(currentList) });
+        alert("성공적으로 저장되었습니다!");
+        loadData(type);
     }
 
-    function calculateStock() {
-        const summary = {};
-        stockData.forEach(item => {
-            const key = (item.item || "").trim() + "|" + (item.spec || "").trim();
-            if (!summary[key]) summary[key] = { current: 0, parent: item.parent };
-            const q = Number(item.qty) || 0;
-            if (item.type === '입고' || item.type === '초기') summary[key].current += q;
-            else if (item.type === '출고') summary[key].current -= q;
-        });
-        return summary;
-    }
-
-    function getLevel(qty, parent) {
-        const p = (parent || "").toUpperCase();
-        const limit = (p === 'SLEEVE') ? [1000, 3000, 5000] : [3000, 5000, 10000];
-        if (qty < limit[0]) return { lvl: 'lvl-red', txt: '경고', ico: '🔴' };
-        if (qty < limit[1]) return { lvl: 'lvl-orange', txt: '주의', ico: '🟠' };
-        if (qty < limit[2]) return { lvl: 'lvl-부족', txt: '부족', ico: '🟡' };
-        return { lvl: '', txt: '양호', ico: '🟢' };
-    }
-
-    function updateStockDashboard() {
-        const dash = document.getElementById('stock-dashboard');
-        const summary = calculateStock();
-        const parentMap = {};
-        Object.keys(summary).forEach(k => {
-            const info = summary[k];
-            const p = (info.parent || "ETC").toUpperCase();
-            if (!parentMap[p]) parentMap[p] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 };
-            parentMap[p][getLevel(info.current, p).txt]++;
-        });
-        dash.innerHTML = Object.keys(parentMap).map(p => `
-            <div class="dash-card">
-                <div class="dash-header">📁 ${p}</div>
-                <div class="status-grid">
-                    <div class="st-btn btn-red">🔴 ${parentMap[p]['경고']}</div>
-                    <div class="st-btn btn-orange">🟠 ${parentMap[p]['주의']}</div>
-                    <div class="st-btn btn-yellow">🟡 ${parentMap[p]['부족']}</div>
-                    <div class="st-btn btn-green">🟢 ${parentMap[p]['양호']}</div>
-                </div>
-            </div>`).join('');
-    }
-
-    function renderStock() {
-        const body = document.getElementById('stock-table-body');
-        const summary = calculateStock();
-        body.innerHTML = stockData.sort((a,b)=>b.timestamp-a.timestamp).map(item => {
-            const key = (item.item || "").trim() + "|" + (item.spec || "").trim();
-            const cur = summary[key] ? summary[key].current : 0;
-            const res = getLevel(cur, item.parent);
-            return `<tr class="${res.lvl}">
-                <td data-label="일자">${item.date}</td>
-                <td data-label="상위">${item.parent}</td>
-                <td data-label="분류">${item.category}</td>
-                <td data-label="품목" onclick="showHistory('${item.item}')" style="text-decoration:underline; cursor:pointer;">${item.item}</td>
-                <td data-label="규격">${item.spec}</td>
-                <td data-label="구분"><span class="badge ${item.type==='출고'?'bg-out':'bg-in'}">${item.type}</span></td>
-                <td data-label="수량">${item.qty.toLocaleString()}</td>
-                <td data-label="현재고">${cur.toLocaleString()}</td>
-                <td data-label="상태">${res.ico} ${res.txt}</td>
-                <td data-label="관리"><button onclick="deleteData('stock', ${item.timestamp})" style="color:red; border:none; background:none; cursor:pointer;">삭제</button></td>
-            </tr>`;
-        }).join('');
-    }
-
-    function renderMaterials() {
-        const body = document.getElementById('ma-table-body');
-        body.innerHTML = materialData.sort((a,b)=>b.timestamp-a.timestamp).map(m => `
-            <tr>
-                <td data-label="일자">${m.date}</td>
-                <td data-label="프로젝트">${m.project}</td>
-                <td data-label="거래처">${m.vendor}</td>
-                <td data-label="자재명">${m.item}</td>
-                <td data-label="필요">${m.req.toLocaleString()}</td>
-                <td data-label="입고">${m.recv.toLocaleString()}</td>
-                <td data-label="상태">${m.status}</td>
-                <td data-label="관리"><button onclick="deleteData('material', ${m.timestamp})" style="color:red; border:none; background:none; cursor:pointer;">삭제</button></td>
-            </tr>`).join('');
-    }
-
-    async function addStock() {
-        const item = { date: document.getElementById('st-date').value, parent: document.getElementById('st-parent').value, category: document.getElementById('st-category').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: Date.now() };
-        if(!item.item) return alert("품목명 입력!");
-        stockData.push(item);
-        await fetch(STOCK_DB, { method: 'PUT', body: JSON.stringify(stockData) });
-        loadStock();
-    }
-
-    async function addMaterial() {
-        const item = { date: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, req: Number(document.getElementById('ma-req').value), recv: Number(document.getElementById('ma-recv').value), status: document.getElementById('ma-status').value, timestamp: Date.now() };
-        if(!item.item) return alert("자재명 입력!");
-        materialData.push(item);
-        await fetch(MATERIAL_DB, { method: 'PUT', body: JSON.stringify(materialData) });
-        loadMaterials();
-    }
-
-    async function deleteData(type, ts) {
-        if(!confirm("삭제할까요?")) return;
-        if(type==='stock') { stockData = stockData.filter(d => d.timestamp !== ts); await fetch(STOCK_DB, { method: 'PUT', body: JSON.stringify(stockData) }); loadStock(); }
-        else { materialData = materialData.filter(d => d.timestamp !== ts); await fetch(MATERIAL_DB, { method: 'PUT', body: JSON.stringify(materialData) }); loadMaterials(); }
-    }
-
-    function showHistory(itemName) {
-        const hist = stockData.filter(d => d.item === itemName).sort((a,b)=>b.timestamp-a.timestamp);
-        document.getElementById('historyList').innerHTML = hist.map(h => `<div style="padding:10px; border-bottom:1px solid #eee; display:flex; justify-content:space-between;"><span>${h.date}</span><span class="badge">${h.type}</span><span>${h.qty}</span></div>`).join('');
-        document.getElementById('historyModal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-
-    // 오늘 날짜 자동 설정
+    // 오늘 날짜 기본 세팅
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('st-date').value = today;
-    document.getElementById('ma-date').value = today;
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
 
-    loadStock();
+    // 첫 페이지 로드
+    loadData('stock');
 </script>
 </body>
 </html>
