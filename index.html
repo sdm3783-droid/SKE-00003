@@ -6,51 +6,53 @@
     <title>SKE-00003 스마트 재고 관리</title>
     <style>
         :root { --primary: #1e293b; --bg: #f1f5f9; --red: #ef4444; --orange: #f97316; --yellow: #eab308; --green: #10b981; --blue: #3b82f6; }
-        body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); padding: 10px; color: #334155; margin: 0; line-height: 1.5; -webkit-text-size-adjust: none; }
+        body { font-family: 'Pretendard', -apple-system, sans-serif; background: var(--bg); padding: 10px; color: #1e293b; margin: 0; -webkit-text-size-adjust: none; }
         .container { max-width: 1400px; margin: auto; background: white; padding: 15px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }
         
         h2 { font-size: 1.3rem; margin: 10px 0 20px 0; color: var(--primary); display: flex; align-items: center; gap: 8px; cursor: pointer; }
 
         /* 대시보드 카드 */
         .dashboard-container { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
-        .dash-card { flex: 1 1 300px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; box-sizing: border-box; }
-        .dash-header { font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: var(--primary); border-bottom: 1px solid #f1f5f9; padding-bottom: 8px; }
+        .dash-card { flex: 1 1 280px; background: #fff; border: 1px solid #e2e8f0; border-radius: 14px; padding: 15px; box-sizing: border-box; }
+        .dash-header { font-size: 1rem; font-weight: 800; margin-bottom: 12px; color: var(--primary); border-bottom: 2px solid #f1f5f9; padding-bottom: 8px; }
         .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .st-btn { border: none; padding: 12px 5px; border-radius: 10px; cursor: pointer; text-align: center; -webkit-tap-highlight-color: transparent; }
+        .st-btn { border: none; padding: 12px 5px; border-radius: 10px; cursor: pointer; text-align: center; }
         .st-btn:active { transform: scale(0.95); opacity: 0.8; }
         .st-label { font-size: 11px; font-weight: bold; display: block; margin-bottom: 2px; }
         .st-num { font-size: 18px; font-weight: 900; }
 
-        .btn-red { background: #fee2e2; color: var(--red); }
-        .btn-orange { background: #fff7ed; color: var(--orange); }
+        .btn-red { background: #fee2e2; color: #b91c1c; }
+        .btn-orange { background: #fff7ed; color: #9a3412; }
         .btn-yellow { background: #fefce8; color: #854d0e; }
-        .btn-green { background: #f0fdf4; color: var(--green); }
+        .btn-green { background: #f0fdf4; color: #15803d; }
 
         /* 입력 폼 */
         .input-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
-        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; outline: none; width: 100%; box-sizing: border-box; background: white; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; grid-column: 1 / -1; margin-top: 10px; font-size: 15px; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; background: white; color: #000; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-weight: bold; cursor: pointer; grid-column: 1 / -1; margin-top: 10px; }
 
         /* 필터 및 검색 */
         .filter-area { margin-bottom: 15px; display: flex; gap: 8px; }
-        #searchItem { flex: 1; padding: 12px; border-radius: 8px; border: 2px solid var(--blue); font-size: 15px; outline: none; font-weight: bold; }
+        #searchItem { flex: 1; padding: 12px; border-radius: 8px; border: 2.5px solid var(--blue); font-size: 15px; font-weight: 800; color: #000; outline: none; }
         .btn-reset { padding: 0 15px; border-radius: 8px; border: 1px solid #cbd5e1; background: #fff; cursor: pointer; font-size: 13px; font-weight: bold; }
 
         /* 테이블 및 모바일 카드 */
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 800px; }
-        th { background: #f8fafc; padding: 12px 8px; font-size: 12px; color: #64748b; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 14px; }
+        th { background: #f8fafc; padding: 12px 8px; font-size: 12px; color: #475569; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 14px; color: #000; font-weight: 500; }
+        
+        .no-data { padding: 40px; text-align: center; color: #94a3b8; font-weight: bold; }
 
         @media screen and (max-width: 768px) {
             .dash-card { flex: 1 1 100%; }
             table, thead, tbody, th, td, tr { display: block; }
             thead tr { position: absolute; top: -9999px; }
-            tr { border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 12px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+            tr { border: 1px solid #e2e8f0; border-radius: 12px; margin-bottom: 12px; padding: 12px; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
             td { border: none; position: relative; padding-left: 40% !important; text-align: left; min-height: 32px; display: flex; align-items: center; border-bottom: 1px dashed #f1f5f9; padding: 8px 0; }
             td:last-child { border-bottom: none; }
-            td:before { position: absolute; left: 10px; font-weight: 800; color: #94a3b8; font-size: 12px; width: 30%; }
+            td:before { position: absolute; left: 10px; font-weight: 800; color: #64748b; font-size: 12px; width: 30%; }
             td:nth-of-type(1):before { content: "일자"; }
             td:nth-of-type(2):before { content: "상위폴더"; }
             td:nth-of-type(3):before { content: "상세분류"; }
@@ -63,14 +65,16 @@
             td:nth-of-type(10):before { content: "관리"; }
         }
 
-        .lvl-red { border-left: 5px solid var(--red); background-color: #fff1f2 !important; }
-        .lvl-orange { border-left: 5px solid var(--orange); background-color: #fff7ed !important; }
-        .lvl-yellow { border-left: 5px solid var(--yellow); background-color: #fefce8 !important; }
+        /* 상태별 색상 대비 강화 */
+        .lvl-red { border-left: 6px solid var(--red) !important; background-color: #fff1f2 !important; }
+        .lvl-orange { border-left: 6px solid var(--orange) !important; background-color: #fff7ed !important; }
+        .lvl-yellow { border-left: 6px solid var(--yellow) !important; background-color: #fefce8 !important; }
+        
         .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
-        .bg-in { background: #dcfce7; color: #166534; }
-        .bg-out { background: #fee2e2; color: #991b1b; }
-        .bg-init { background: #e0f2fe; color: #0369a1; }
-        .btn-sm { padding: 8px 10px; font-size: 12px; cursor: pointer; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; margin: 2px; }
+        .bg-in { background: #dcfce7; color: #166534; border: 1px solid #166534; }
+        .bg-out { background: #fee2e2; color: #991b1b; border: 1px solid #991b1b; }
+        .bg-init { background: #e0f2fe; color: #0369a1; border: 1px solid #0369a1; }
+        .btn-sm { padding: 8px 10px; font-size: 12px; cursor: pointer; border-radius: 6px; border: 1px solid #cbd5e1; background: #fff; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -105,7 +109,7 @@
     </div>
 
     <div class="table-wrapper">
-        <table>
+        <table id="mainTable">
             <thead>
                 <tr>
                     <th>일자</th><th>상위</th><th>분류</th><th>품목</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th>
@@ -113,6 +117,7 @@
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
+        <div id="noDataMessage" class="no-data" style="display:none;">검색 결과가 없습니다.</div>
     </div>
 </div>
 
@@ -130,14 +135,14 @@
             stockData = data ? Object.values(data) : [];
             updateDashboard();
             render();
-        } catch (e) { console.error("Data Load Error"); }
+        } catch (e) { console.error("데이터 로드 중 오류 발생"); }
     }
 
     function calculateStock() {
         const summary = {};
         stockData.forEach(item => {
             const parent = (item.parent || "CABLE").toUpperCase();
-            const key = (item.item || "") + "|" + (item.spec || "");
+            const key = (item.item || "").trim() + "|" + (item.spec || "").trim();
             if (!summary[key]) summary[key] = { current: 0, item: item.item, spec: item.spec, parent: parent };
             const q = Number(item.qty) || 0;
             if (item.type === '입고' || item.type === '초기') summary[key].current += q;
@@ -189,12 +194,11 @@
         });
     }
 
-    // 모바일 터치 대응 필터 적용 함수
     function applyFilter(parent, status) {
         const searchInput = document.getElementById('searchItem');
         searchInput.value = parent + " " + status;
-        render(); // 강제 렌더링 호출
-        window.scrollTo({ top: document.querySelector('.filter-area').offsetTop - 20, behavior: 'smooth' });
+        render();
+        window.scrollTo({ top: searchInput.offsetTop - 20, behavior: 'smooth' });
     }
 
     function resetFilter() {
@@ -204,64 +208,71 @@
 
     function render() {
         const body = document.getElementById('tableBody');
+        const noData = document.getElementById('noDataMessage');
         const searchInput = document.getElementById('searchItem').value.toLowerCase().trim();
         const searchTerms = searchInput ? searchInput.split(/\s+/) : []; 
         
         const summary = calculateStock();
         body.innerHTML = '';
         const sorted = [...stockData].sort((a,b) => b.timestamp - a.timestamp);
+        let matchCount = 0;
 
         sorted.forEach((item) => {
             const originalIdx = stockData.indexOf(item);
             const parent = (item.parent || "CABLE").toUpperCase();
-            const key = (item.item || "") + "|" + (item.spec || "");
+            const key = (item.item || "").trim() + "|" + (item.spec || "").trim();
             const cur = summary[key] ? summary[key].current : 0;
             const res = getLevel(cur, parent);
             
-            const rowFullText = (parent + (item.category || "") + (item.item || "") + (item.spec || "") + res.txt).toLowerCase();
+            // 모든 텍스트 결합 (검색 대상)
+            const rowFullText = (parent + " " + (item.category || "") + " " + (item.item || "") + " " + (item.spec || "") + " " + res.txt).toLowerCase();
             
+            // 공백 분리 검색 단어 모두 포함 여부 확인
             const isMatch = searchTerms.every(term => rowFullText.includes(term));
             
             if (isMatch) {
+                matchCount++;
                 body.innerHTML += `
                     <tr class="${res.lvl}">
                         <td onclick="editCell(${originalIdx}, 'date')">${item.date}</td>
                         <td onclick="editCell(${originalIdx}, 'parent')" style="color:var(--blue); font-weight:800;">${parent}</td>
                         <td onclick="editCell(${originalIdx}, 'category')">${item.category}</td>
-                        <td onclick="editCell(${originalIdx}, 'item')" style="font-weight:800;">${item.item}</td>
+                        <td onclick="editCell(${originalIdx}, 'item')" style="font-weight:900;">${item.item}</td>
                         <td onclick="editCell(${originalIdx}, 'spec')">${item.spec}</td>
                         <td><span class="badge ${item.type==='출고'?'bg-out':(item.type==='입고'?'bg-in':'bg-init')}">${item.type}</span></td>
                         <td onclick="editCell(${originalIdx}, 'qty')">${item.qty.toLocaleString()}</td>
-                        <td style="font-weight:900;">${cur.toLocaleString()}</td>
+                        <td style="font-weight:900; font-size:15px;">${cur.toLocaleString()}</td>
                         <td style="font-weight:bold">${res.txt === '양호' ? '🟢 양호' : (res.txt === '시급' ? '🔴 시급' : (res.txt === '주의' ? '🟠 주의' : '🟡 부족'))}</td>
                         <td>
                             <button class="btn-sm" onclick="copyRow(${originalIdx})">복사</button> 
-                            <button class="btn-sm" onclick="deleteItem(${originalIdx})" style="color:red">삭제</button>
+                            <button class="btn-sm" onclick="deleteItem(${originalIdx})" style="color:red; border-color:red;">삭제</button>
                         </td>
                     </tr>`;
             }
         });
+
+        noData.style.display = matchCount === 0 ? 'block' : 'none';
     }
 
     function editCell(idx, field) {
-        const newVal = prompt("내용 수정:", stockData[idx][field]);
+        const newVal = prompt("수정할 내용을 입력하세요:", stockData[idx][field]);
         if (newVal !== null) {
-            stockData[idx][field] = (field === 'qty') ? Number(newVal) : newVal.toUpperCase();
+            stockData[idx][field] = (field === 'qty') ? Number(newVal) : newVal.toUpperCase().trim();
             saveData();
         }
     }
     async function addItem() {
         const item = {
             date: document.getElementById('sDate').value,
-            parent: document.getElementById('sParent').value.toUpperCase(),
-            category: document.getElementById('sCategory').value.toUpperCase(),
-            item: document.getElementById('sItem').value,
-            spec: document.getElementById('sSpec').value,
+            parent: document.getElementById('sParent').value.toUpperCase().trim(),
+            category: document.getElementById('sCategory').value.toUpperCase().trim(),
+            item: document.getElementById('sItem').value.trim(),
+            spec: document.getElementById('sSpec').value.trim(),
             type: document.getElementById('sType').value,
             qty: Number(document.getElementById('sQty').value) || 0,
             timestamp: Date.now()
         };
-        if(!item.item) return alert("품목명 필수");
+        if(!item.item) return alert("품목명을 입력하세요!");
         stockData.push(item); await saveData();
     }
     async function saveData() { await fetch(DB_PATH, { method: 'PUT', body: JSON.stringify(stockData) }); loadData(); }
@@ -274,8 +285,7 @@
         document.getElementById('sType').value = "출고";
         window.scrollTo({top:0, behavior:'smooth'});
     }
-    async function deleteItem(idx) { if(confirm("삭제하시겠습니까?")) { stockData.splice(idx, 1); await saveData(); } }
-
+    async function deleteItem(idx) { if(confirm("정말 삭제하시겠습니까?")) { stockData.splice(idx, 1); await saveData(); } }
     loadData(); setInterval(loadData, 15000);
 </script>
 </body>
