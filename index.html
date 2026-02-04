@@ -2,31 +2,34 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>사내 보유재고 통합 관리 (SKE-00003)</title>
+    <title>사내 통합 재고 관리 시스템</title>
     <style>
         :root { --primary: #0f172a; --bg: #f8fafc; --warn-red: #ef4444; --warn-orange: #f97316; --warn-yellow: #facc15; --safe: #10b981; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
         .container { max-width: 1700px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { margin-top: 0; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
         
+        /* 드릴다운 대시보드 */
         .dashboard { display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; }
-        .dash-card { min-width: 220px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 18px; cursor: pointer; transition: 0.3s; position: relative; }
+        .dash-card { min-width: 220px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 18px; cursor: pointer; transition: 0.3s; }
         .dash-card:hover { transform: translateY(-5px); border-color: var(--primary); box-shadow: 0 8px 20px rgba(15, 23, 42, 0.1); }
         .dash-category-tag { font-size: 10px; font-weight: bold; color: white; background: var(--primary); padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 8px; }
         .dash-title { font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
         .dash-alert-count { font-size: 12px; font-weight: bold; color: var(--warn-red); }
 
+        /* 입력 폼 */
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 11px; font-weight: bold; color: #64748b; }
         input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; grid-column: 1 / -1; }
 
+        /* 테이블 및 경고 스타일 */
         table { width: 100%; border-collapse: collapse; }
         th { background: #f8fafc; color: #475569; padding: 12px; font-size: 12px; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 13px; }
         
-        /* 시스템 내부 기준에 따른 색상 변화 유지 */
+        /* 보내주신 표 기준 배경색 로직 */
         .lvl-red { background-color: #fee2e2 !important; border-left: 4px solid var(--warn-red); }
         .lvl-orange { background-color: #ffedd5 !important; border-left: 4px solid var(--warn-orange); }
         .lvl-yellow { background-color: #fefce8 !important; border-left: 4px solid var(--warn-yellow); }
@@ -41,15 +44,13 @@
         .bg-init { background: #e0f2fe; color: #0369a1; }
         
         .btn-sm { padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: white; margin: 0 2px; }
-        .btn-copy { color: #2563eb; border-color: #2563eb; }
-        .btn-del { color: #dc2626; border-color: #dc2626; }
         #syncStatus { font-size: 12px; color: var(--safe); margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 보유재고 통합 관리 (SKE-00003) <span id="syncStatus">● 연결 중...</span></h2>
+    <h2>📦 통합 재고 관리 시스템 <span id="syncStatus">● 연결 확인 중...</span></h2>
 
     <div id="dashboard" class="dashboard"></div>
 
@@ -66,10 +67,9 @@
                     <option value="출고">➖ 출고</option>
                 </select>
             </div>
-            <div class="field"><label>수량(M)</label><input type="number" id="sQty" value="0"></div>
-            <div class="field"><label>안전재고(M)</label><input type="number" id="sMinQty" value="10000"></div>
+            <div class="field"><label>수량(M/EA)</label><input type="number" id="sQty" value="0"></div>
             <div class="field"><label>비고</label><input type="text" id="sRemark" placeholder="비고"></div>
-            <button class="btn-add" onclick="addItem()">재고 기록 등록</button>
+            <button class="btn-add" onclick="addItem()">재고 기록 업데이트</button>
         </div>
     </div>
 
@@ -106,38 +106,49 @@
             updateDashboard();
             render();
             document.getElementById('syncStatus').innerText = "● 실시간 연결됨";
-        } catch (e) { document.getElementById('syncStatus').innerText = "○ 연결 오류"; }
+        } catch (e) { document.getElementById('syncStatus').innerText = "○ 서버 연결 오류"; }
     }
 
     function calculateStock() {
         const summary = {};
         stockData.forEach(item => {
             const key = item.item + "|" + item.spec;
-            if (!summary[key]) summary[key] = { current: 0, min: 0, item: item.item, spec: item.spec, category: item.category };
+            if (!summary[key]) summary[key] = { current: 0, item: item.item, spec: item.spec, category: item.category };
             const q = Number(item.qty) || 0;
             if (item.type === '입고' || item.type === '초기') summary[key].current += q;
             else if (item.type === '출고') summary[key].current -= q;
-            summary[key].min = Number(item.minQty) || 0; 
         });
         return summary;
     }
 
-    function getLevelClass(qty, min) {
-        if (qty < 3000) return 'lvl-red';
-        if (qty < 5000) return 'lvl-orange';
-        if (qty < 10000) return 'lvl-yellow';
+    // [📍 사진 기준 개별 로직] 분류별 맞춤 기준 적용
+    function getLevelClass(qty, category) {
+        const cat = category.toUpperCase();
+        
+        // SLEEVE 기준 (보내주신 새로운 사진 기준)
+        if (cat === 'SLEEVE') {
+            if (qty < 1000) return 'lvl-red';    // 1,000M 미만
+            if (qty < 3000) return 'lvl-orange'; // 3,000M 미만
+            if (qty < 5000) return 'lvl-yellow'; // 5,000M 미만
+        } 
+        // CABLE 기준 (기존 이미지 기준 유지)
+        else if (cat === 'CABLE') {
+            if (qty < 3000) return 'lvl-red';
+            if (qty < 5000) return 'lvl-orange';
+            if (qty < 10000) return 'lvl-yellow';
+        }
         return '';
     }
 
     function editCell(idx, field, element) {
         if (element.querySelector('input')) return;
         const input = document.createElement('input');
-        input.type = (field === 'qty' || field === 'minQty') ? 'number' : (field === 'date' ? 'date' : 'text');
+        input.type = (field === 'qty') ? 'number' : (field === 'date' ? 'date' : 'text');
         input.value = stockData[idx][field];
         input.className = 'edit-input';
         element.innerHTML = ''; element.appendChild(input); input.focus();
         input.onblur = async function() {
-            stockData[idx][field] = (field === 'qty' || field === 'minQty') ? Number(input.value) : input.value;
+            stockData[idx][field] = (field === 'qty') ? Number(input.value) : input.value;
             await saveData();
         };
         input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
@@ -148,7 +159,6 @@
         document.getElementById('sItem').value = item.item;
         document.getElementById('sSpec').value = item.spec;
         document.getElementById('sCategory').value = item.category;
-        document.getElementById('sMinQty').value = item.minQty;
         document.getElementById('sType').value = "출고";
         document.getElementById('sQty').focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -159,8 +169,7 @@
             date: document.getElementById('sDate').value, category: document.getElementById('sCategory').value,
             item: document.getElementById('sItem').value, spec: document.getElementById('sSpec').value,
             type: document.getElementById('sType').value, qty: Number(document.getElementById('sQty').value) || 0,
-            minQty: Number(document.getElementById('sMinQty').value) || 0, remark: document.getElementById('sRemark').value,
-            timestamp: Date.now()
+            remark: document.getElementById('sRemark').value, timestamp: Date.now()
         };
         if(!item.item) return alert("품목명을 입력하세요!");
         stockData.push(item); await saveData();
@@ -183,17 +192,24 @@
             if (item.item.toLowerCase().includes(filter) || item.spec.toLowerCase().includes(filter) || item.category.toLowerCase().includes(filter)) {
                 const key = item.item + "|" + item.spec;
                 const cur = summary[key].current;
-                const lvl = getLevelClass(cur, item.minQty);
+                const lvl = getLevelClass(cur, item.category);
+                
+                // 텍스트 상태 표시
+                let statusText = '🟢 양호';
+                if (lvl === 'lvl-red') statusText = '🔴 시급';
+                else if (lvl === 'lvl-orange') statusText = '🟠 주의';
+                else if (lvl === 'lvl-yellow') statusText = '🟡 부족';
+
                 body.innerHTML += `
                     <tr class="${lvl}">
                         <td class="editable" onclick="editCell(${originalIdx}, 'date', this)">${item.date}</td>
-                        <td>${item.category}</td>
+                        <td class="editable" onclick="editCell(${originalIdx}, 'category', this)">${item.category}</td>
                         <td class="editable" style="font-weight:bold;" onclick="editCell(${originalIdx}, 'item', this)">${item.item}</td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'spec', this)">${item.spec}</td>
                         <td><span class="badge ${item.type==='출고'?'bg-out':(item.type==='입고'?'bg-in':'bg-init')}">${item.type}</span></td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'qty', this)">${item.qty.toLocaleString()}</td>
                         <td style="font-weight:900;">${cur.toLocaleString()}</td>
-                        <td>${cur < 3000 ? '🔴 시급' : (cur < 5000 ? '🟠 주의' : (cur < 10000 ? '🟡 부족' : '🟢 양호'))}</td>
+                        <td>${statusText}</td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'remark', this)">${item.remark}</td>
                         <td>
                             <button class="btn-sm btn-copy" onclick="copyRow(${originalIdx})">복사</button>
@@ -213,7 +229,8 @@
             const info = summary[key];
             if (!catMap[info.category]) catMap[info.category] = { total: 0, alert: 0 };
             catMap[info.category].total++;
-            if (info.current < 10000) catMap[info.category].alert++;
+            const lvl = getLevelClass(info.current, info.category);
+            if (lvl !== '') catMap[info.category].alert++;
         });
         dash.innerHTML = '';
         Object.keys(catMap).sort().forEach(cat => {
@@ -222,7 +239,7 @@
                 <div class="dash-card" onclick="filterByCategory('${cat}')">
                     <div class="dash-category-tag">CATEGORY</div>
                     <div class="dash-title">${cat}</div>
-                    <div class="dash-alert-count">${s.alert > 0 ? '⚠️ 재고부족 ' + s.alert + '건' : '🟢 정상'}</div>
+                    <div class="dash-alert-count">${s.alert > 0 ? '⚠️ 재고주의 ' + s.alert + '건' : '🟢 정상'}</div>
                 </div>
             `;
         });
