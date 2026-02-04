@@ -2,57 +2,85 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>SKE-00003 통합 재고 관리 시스템</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SKE-00003 통합 재고 관리</title>
     <style>
         :root { --primary: #0f172a; --bg: #f8fafc; --warn-red: #ef4444; --warn-orange: #f97316; --warn-yellow: #facc15; --safe: #10b981; }
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
-        .container { max-width: 1750px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h2 { margin-top: 0; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
+        body { font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: var(--bg); padding: 10px; color: #1e293b; margin: 0; }
+        .container { max-width: 1750px; margin: auto; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { font-size: 1.25rem; margin-top: 0; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 12px; margin-bottom: 20px; }
         
-        .dashboard { display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; }
-        .dash-card { min-width: 240px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 20px; cursor: pointer; transition: 0.3s; }
-        .dash-card:hover { transform: translateY(-5px); border-color: #3b82f6; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.15); }
-        .dash-folder-tag { font-size: 10px; font-weight: bold; color: white; background: #3b82f6; padding: 2px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; }
-        .dash-title { font-size: 20px; font-weight: 800; color: #1e293b; margin-bottom: 8px; }
-        .dash-alert-text { font-size: 13px; font-weight: bold; color: var(--warn-red); margin-top: 10px; }
+        /* 대시보드 모바일 최적화 */
+        .dashboard { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .dash-card { flex: 1 1 calc(50% - 10px); min-width: 150px; background: #fff; border: 2px solid #e2e8f0; border-radius: 12px; padding: 15px; cursor: pointer; box-sizing: border-box; }
+        .dash-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 5px; }
+        .dash-alert-text { font-size: 0.85rem; font-weight: bold; color: var(--warn-red); }
 
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
-        .field { display: flex; flex-direction: column; gap: 5px; }
-        label { font-size: 11px; font-weight: bold; color: #64748b; }
-        input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
-        .btn-add { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; grid-column: 1 / -1; }
+        /* 입력창 모바일 최적화 */
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; background: #f1f5f9; padding: 15px; border-radius: 10px; margin-bottom: 20px; }
+        .field { display: flex; flex-direction: column; gap: 4px; }
+        label { font-size: 0.75rem; font-weight: bold; color: #64748b; }
+        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; -webkit-appearance: none; }
+        .btn-add { background: var(--primary); color: white; border: none; padding: 12px; border-radius: 6px; cursor: pointer; font-weight: bold; grid-column: 1 / -1; font-size: 1rem; }
 
-        table { width: 100%; border-collapse: collapse; }
-        th { background: #f8fafc; color: #475569; padding: 12px; font-size: 12px; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
-        td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 13px; }
+        /* 테이블 반응형 (핵심!) */
+        .table-wrapper { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 800px; } /* PC용 최소폭 */
+        th { background: #f8fafc; color: #475569; padding: 12px 8px; font-size: 12px; border-bottom: 2px solid #e2e8f0; }
+        td { padding: 12px 8px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 13px; }
         
-        .lvl-red { background-color: #fee2e2 !important; border-left: 4px solid var(--warn-red); }
-        .lvl-orange { background-color: #ffedd5 !important; border-left: 4px solid var(--warn-orange); }
-        .lvl-yellow { background-color: #fefce8 !important; border-left: 4px solid var(--warn-yellow); }
+        /* 모바일 화면 (768px 이하) 설정 */
+        @media screen and (max-width: 768px) {
+            .dash-card { flex: 1 1 100%; } /* 대시보드 한 줄에 하나씩 */
+            
+            /* 테이블을 카드 형태로 변환 */
+            table, thead, tbody, th, td, tr { display: block; }
+            thead tr { position: absolute; top: -9999px; left: -9999px; }
+            tr { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 15px; padding: 10px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+            td { border: none; position: relative; padding-left: 40%; text-align: left; min-height: 25px; line-height: 25px; }
+            td:before { position: absolute; left: 10px; width: 35%; font-weight: bold; color: #64748b; font-size: 12px; }
+            
+            /* 카드 내부 라벨 지정 */
+            td:nth-of-type(1):before { content: "일자"; }
+            td:nth-of-type(2):before { content: "상위분류"; }
+            td:nth-of-type(3):before { content: "상세분류"; }
+            td:nth-of-type(4):before { content: "품목명"; }
+            td:nth-of-type(5):before { content: "규격"; }
+            td:nth-of-type(6):before { content: "구분"; }
+            td:nth-of-type(7):before { content: "수량"; }
+            td:nth-of-type(8):before { content: "현재고"; }
+            td:nth-of-type(9):before { content: "상태"; }
+            td:nth-of-type(10):before { content: "관리"; }
+            
+            .btn-sm { padding: 8px 15px; margin: 5px 2px; display: inline-block; }
+        }
+
+        .lvl-red { background-color: #fee2e2 !important; border-left: 5px solid var(--warn-red); }
+        .lvl-orange { background-color: #ffedd5 !important; border-left: 5px solid var(--warn-orange); }
+        .lvl-yellow { background-color: #fefce8 !important; border-left: 5px solid var(--warn-yellow); }
         
-        .editable { cursor: pointer; border-radius: 4px; padding: 4px; border: 1px solid transparent; }
-        .editable:hover { background: #fff9c4; border: 1px solid #facc15; }
-        .edit-input { width: 90%; padding: 4px; border: 2px solid #3b82f6; border-radius: 4px; text-align: center; font-size: 13px; }
+        .editable { cursor: pointer; border-radius: 4px; padding: 2px; border: 1px solid transparent; }
+        .editable:active { background: #fff9c4; border: 1px solid #facc15; } /* 모바일은 터치 대응 */
         
-        .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+        .badge { padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .bg-in { background: #dcfce7; color: #166534; }
         .bg-out { background: #fee2e2; color: #991b1b; }
         .bg-init { background: #e0f2fe; color: #0369a1; }
-        .btn-sm { padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: white; margin: 0 2px; }
+        .btn-sm { padding: 6px 12px; font-size: 12px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: white; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 통합 재고 관리 시스템 (SKE-00003) <span id="syncStatus" style="font-size:12px; color:var(--safe); margin-left:10px;">● 연결 대기 중...</span></h2>
+    <h2>📦 통합 재고 관리 <span id="syncStatus" style="font-size:11px; color:var(--safe); font-weight:normal;">● 실시간 동기화 중</span></h2>
 
     <div id="dashboard" class="dashboard"></div>
 
     <div class="input-section">
         <div class="input-grid">
             <div class="field"><label>일자</label><input type="date" id="sDate"></div>
-            <div class="field"><label>상위분류(Folder)</label><input type="text" id="sParent" value="CABLE"></div>
-            <div class="field"><label>상세분류(Category)</label><input type="text" id="sCategory" placeholder="POWER, LAN 등"></div>
+            <div class="field"><label>상위분류(FOLDER)</label><input type="text" id="sParent" value="CABLE"></div>
+            <div class="field"><label>상세분류</label><input type="text" id="sCategory" placeholder="분류 입력"></div>
             <div class="field"><label>품목명</label><input type="text" id="sItem" placeholder="품목명"></div>
             <div class="field"><label>규격</label><input type="text" id="sSpec" placeholder="규격"></div>
             <div class="field"><label>구분</label>
@@ -64,24 +92,28 @@
             </div>
             <div class="field"><label>수량</label><input type="number" id="sQty" value="0"></div>
             <div class="field"><label>비고</label><input type="text" id="sRemark" placeholder="비고"></div>
-            <button class="btn-add" onclick="addItem()">기록 등록</button>
+            <button class="btn-add" onclick="addItem()">재고 기록 업데이트</button>
         </div>
     </div>
 
-    <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
-        <input type="text" id="searchItem" onkeyup="render()" placeholder="🔍 검색어 입력 (품목, 규격, 분류...)" style="padding: 10px; width: 350px; border: 1px solid #cbd5e1; border-radius: 8px;">
-        <button onclick="resetFilter()" class="btn-sm">전체보기</button>
-        <div style="flex-grow: 1; text-align: right;"><button onclick="exportCSV()" class="btn-sm" style="background:#059669; color:white;">엑셀 저장</button></div>
+    <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-direction: column;">
+        <input type="text" id="searchItem" onkeyup="render()" placeholder="🔍 검색 (품목, 분류, 규격...)" style="padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; width: 100%; box-sizing: border-box;">
+        <div style="display: flex; gap: 5px;">
+            <button onclick="resetFilter()" class="btn-sm" style="flex:1;">전체보기</button>
+            <button onclick="exportCSV()" class="btn-sm" style="flex:1; background:#059669; color:white; border:none;">엑셀 저장</button>
+        </div>
     </div>
 
-    <table>
-        <thead>
-            <tr>
-                <th>일자</th><th>상위분류</th><th>상세분류</th><th>품목명</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody"></tbody>
-    </table>
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>일자</th><th>상위</th><th>상세</th><th>품목</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 </div>
 
 <script>
@@ -98,14 +130,13 @@
             stockData = data ? Object.values(data) : [];
             updateDashboard();
             render();
-            document.getElementById('syncStatus').innerText = "● 실시간 연결됨";
-        } catch (e) { document.getElementById('syncStatus').innerText = "○ 연결 오류"; }
+        } catch (e) { console.error("Data Load Error"); }
     }
 
     function calculateStock() {
         const summary = {};
         stockData.forEach(item => {
-            const key = item.item + "|" + item.spec;
+            const key = (item.item || "") + "|" + (item.spec || "");
             if (!summary[key]) summary[key] = { current: 0, item: item.item, spec: item.spec, parent: (item.parent || "CABLE").toUpperCase() };
             const q = Number(item.qty) || 0;
             if (item.type === '입고' || item.type === '초기') summary[key].current += q;
@@ -129,17 +160,12 @@
     }
 
     function editCell(idx, field, element) {
-        if (element.querySelector('input')) return;
-        const input = document.createElement('input');
-        input.type = (field === 'qty') ? 'number' : (field === 'date' ? 'date' : 'text');
-        input.value = stockData[idx][field] || "";
-        input.className = 'edit-input';
-        element.innerHTML = ''; element.appendChild(input); input.focus();
-        input.onblur = async function() {
-            stockData[idx][field] = (field === 'qty') ? Number(input.value) : input.value.toUpperCase();
-            await saveData();
-        };
-        input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
+        const currentVal = stockData[idx][field];
+        const newVal = prompt("새로운 값을 입력하세요:", currentVal);
+        if (newVal !== null) {
+            stockData[idx][field] = (field === 'qty') ? Number(newVal) : newVal.toUpperCase();
+            saveData();
+        }
     }
 
     async function addItem() {
@@ -177,7 +203,7 @@
                 item.category.toLowerCase().includes(filter) || parent.toLowerCase().includes(filter)) {
                 
                 const key = item.item + "|" + item.spec;
-                const cur = summary[key].current;
+                const cur = summary[key] ? summary[key].current : 0;
                 const lvl = getLevelClass(cur, parent);
                 let statusText = '🟢 양호';
                 if (lvl === 'lvl-red') statusText = '🔴 시급';
@@ -186,16 +212,16 @@
 
                 body.innerHTML += `
                     <tr class="${lvl}">
-                        <td class="editable" onclick="editCell(${originalIdx}, 'date', this)">${item.date}</td>
-                        <td class="editable" style="color:#3b82f6; font-weight:bold;" onclick="editCell(${originalIdx}, 'parent', this)">${parent}</td>
-                        <td class="editable" onclick="editCell(${originalIdx}, 'category', this)">${item.category}</td>
-                        <td class="editable" style="font-weight:bold;" onclick="editCell(${originalIdx}, 'item', this)">${item.item}</td>
-                        <td class="editable" onclick="editCell(${originalIdx}, 'spec', this)">${item.spec}</td>
+                        <td onclick="editCell(${originalIdx}, 'date', this)">${item.date}</td>
+                        <td onclick="editCell(${originalIdx}, 'parent', this)" style="color:#3b82f6; font-weight:bold;">${parent}</td>
+                        <td onclick="editCell(${originalIdx}, 'category', this)">${item.category}</td>
+                        <td onclick="editCell(${originalIdx}, 'item', this)" style="font-weight:bold;">${item.item}</td>
+                        <td onclick="editCell(${originalIdx}, 'spec', this)">${item.spec}</td>
                         <td><span class="badge ${item.type==='출고'?'bg-out':(item.type==='입고'?'bg-in':'bg-init')}">${item.type}</span></td>
-                        <td class="editable" onclick="editCell(${originalIdx}, 'qty', this)">${item.qty.toLocaleString()}</td>
+                        <td onclick="editCell(${originalIdx}, 'qty', this)">${item.qty.toLocaleString()}</td>
                         <td style="font-weight:900;">${cur.toLocaleString()}</td>
                         <td>${statusText}</td>
-                        <td><button class="btn-sm" onclick="copyRow(${originalIdx})">복사</button><button class="btn-sm" onclick="deleteItem(${originalIdx})" style="color:red;">삭제</button></td>
+                        <td><button class="btn-sm" onclick="copyRow(${originalIdx})">복사</button> <button class="btn-sm" onclick="deleteItem(${originalIdx})" style="color:red; border-color:red;">삭제</button></td>
                     </tr>
                 `;
             }
@@ -206,23 +232,19 @@
         const dash = document.getElementById('dashboard');
         const summary = calculateStock();
         const parentMap = {};
-
         Object.keys(summary).forEach(key => {
             const info = summary[key];
             const p = info.parent;
-            if (!parentMap[p]) parentMap[p] = { totalItems: 0, alertCount: 0 };
-            parentMap[p].totalItems++;
-            if (getLevelClass(info.current, p) !== '') parentMap[p].alertCount++;
+            if (!parentMap[p]) parentMap[p] = { total: 0, alert: 0 };
+            parentMap[p].total++;
+            if (getLevelClass(info.current, p) !== '') parentMap[p].alert++;
         });
-
         dash.innerHTML = '';
         Object.keys(parentMap).sort().forEach(p => {
             dash.innerHTML += `
                 <div class="dash-card" onclick="filterByParent('${p}')">
-                    <div class="dash-folder-tag">FOLDER</div>
                     <div class="dash-title">📁 ${p}</div>
-                    <div style="font-size:12px; color:#64748b;">품목 수: ${parentMap[p].totalItems}종</div>
-                    <div class="dash-alert-text">${parentMap[p].alertCount > 0 ? '⚠️ 재고주의 ' + parentMap[p].alertCount + '건' : '🟢 정상'}</div>
+                    <div class="dash-alert-text">${parentMap[p].alert > 0 ? '⚠️ 주의 ' + parentMap[p].alert + '건' : '🟢 정상'}</div>
                 </div>
             `;
         });
@@ -240,7 +262,7 @@
         document.getElementById('sQty').focus();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
-    async function deleteItem(idx) { if(confirm("삭제하시겠습니까?")) { stockData.splice(idx, 1); await saveData(); } }
+    async function deleteItem(idx) { if(confirm("삭제할까요?")) { stockData.splice(idx, 1); await saveData(); } }
     function exportCSV() {
         let csv = "\uFEFF일자,상위분류,상세분류,품목명,규격,구분,수량\n";
         stockData.forEach(item => { csv += `"${item.date}","${item.parent}","${item.category}","${item.item}","${item.spec}","${item.type}",${item.qty}\n`; });
