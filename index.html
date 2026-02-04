@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE-00003 SMART STOCK</title>
+    <title>SKE-재고관리</title>
     <style>
         :root { --primary: #0f172a; --bg: #f1f5f9; --red: #ef4444; --orange: #f97316; --yellow: #facc15; --green: #10b981; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 10px; color: #000; margin: 0; }
@@ -68,7 +68,7 @@
 <body>
 
 <div class="container">
-    <h2 onclick="resetFilter()">📊 SKE-00003 재고 통합 관리</h2>
+    <h2 onclick="resetFilter()">📊 SKE 재고 통합 관리</h2>
 
     <div id="dashboard" class="dashboard-container"></div>
 
@@ -139,11 +139,11 @@
     function getLevel(qty, parent) {
         const p = (parent || "").toUpperCase();
         if (p === 'SLEEVE') {
-            if (qty < 1000) return { lvl: 'lvl-red', txt: '시급', ico: '🔴' };
+            if (qty < 1000) return { lvl: 'lvl-red', txt: '경고', ico: '🔴' };
             if (qty < 3000) return { lvl: 'lvl-orange', txt: '주의', ico: '🟠' };
             if (qty < 5000) return { lvl: 'lvl-yellow', txt: '부족', ico: '🟡' };
         } else {
-            if (qty < 3000) return { lvl: 'lvl-red', txt: '시급', ico: '🔴' };
+            if (qty < 3000) return { lvl: 'lvl-red', txt: '경고', ico: '🔴' };
             if (qty < 5000) return { lvl: 'lvl-orange', txt: '주의', ico: '🟠' };
             if (qty < 10000) return { lvl: 'lvl-yellow', txt: '부족', ico: '🟡' };
         }
@@ -168,7 +168,7 @@
                 <div class="dash-card">
                     <div class="dash-header">📁 ${p} 현황</div>
                     <div class="status-grid">
-                        <div class="st-btn btn-red" onclick="applyFilter('${p}', '시급')"><span class="st-label">🔴 시급</span><span class="st-num">${s['시급']}</span></div>
+                        <div class="st-btn btn-red" onclick="applyFilter('${p}', '경고')"><span class="st-label">🔴 경고</span><span class="st-num">${s['경고']}</span></div>
                         <div class="st-btn btn-orange" onclick="applyFilter('${p}', '주의')"><span class="st-label">🟠 주의</span><span class="st-num">${s['주의']}</span></div>
                         <div class="st-btn btn-yellow" onclick="applyFilter('${p}', '부족')"><span class="st-label">🟡 부족</span><span class="st-num">${s['부족']}</span></div>
                         <div class="st-btn btn-green" onclick="applyFilter('${p}', '양호')"><span class="st-label">🟢 양호</span><span class="st-num">${s['양호']}</span></div>
@@ -263,3 +263,4 @@
 </script>
 </body>
 </html>
+
