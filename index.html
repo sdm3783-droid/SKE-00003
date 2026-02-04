@@ -2,73 +2,74 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <title>사내 보유재고 관리 시스템 (수정 모드)</title>
+    <title>사내 보유재고 관리 시스템 (데이터 통합본)</title>
     <style>
         :root { --primary: #0f172a; --bg: #f8fafc; --warn: #ef4444; --safe: #10b981; --info: #3b82f6; --delay-bg: #fff1f2; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 20px; color: #1e293b; }
         .container { max-width: 1700px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         h2 { margin-top: 0; color: var(--primary); border-left: 6px solid var(--primary); padding-left: 15px; margin-bottom: 20px; }
         
-        /* 대시보드 */
         .dashboard { display: flex; gap: 15px; overflow-x: auto; padding: 10px 5px; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; }
         .dash-card { min-width: 260px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; cursor: pointer; transition: 0.3s; position: relative; }
         .dash-card:hover { transform: translateY(-5px); border-color: var(--warn); }
         .dash-title { font-size: 16px; font-weight: 800; color: #1e293b; margin-bottom: 10px; }
         .dash-qty { font-size: 24px; font-weight: 900; color: var(--warn); }
-        .btn-gmail { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-weight: bold; }
-
-        /* 입력 폼 */
+        
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; background: #f1f5f9; padding: 20px; border-radius: 10px; margin-bottom: 20px; }
         .field { display: flex; flex-direction: column; gap: 5px; }
         label { font-size: 11px; font-weight: bold; color: #64748b; }
         input, select { padding: 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; }
         .btn-add { background: var(--primary); color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; grid-column: 1 / -1; }
 
-        /* 테이블 및 수정 스타일 */
         table { width: 100%; border-collapse: collapse; }
         th { background: #f8fafc; color: #475569; padding: 12px; font-size: 12px; border-bottom: 2px solid #e2e8f0; position: sticky; top: 0; z-index: 10; }
         td { padding: 12px; border-bottom: 1px solid #f1f5f9; text-align: center; font-size: 13px; }
         .tr-low { background-color: var(--delay-bg) !important; border-left: 4px solid var(--warn); }
-        .editable { cursor: pointer; border-radius: 4px; padding: 4px; transition: 0.2s; border: 1px solid transparent; }
+        
+        .editable { cursor: pointer; border-radius: 4px; padding: 4px; border: 1px solid transparent; }
         .editable:hover { background: #fff9c4; border: 1px solid #facc15; }
         .edit-input { width: 90%; padding: 4px; border: 2px solid var(--info); border-radius: 4px; text-align: center; font-size: 13px; }
         
         .badge { padding: 3px 8px; border-radius: 4px; font-size: 11px; font-weight: bold; }
         .bg-in { background: #dcfce7; color: #166534; }
         .bg-out { background: #fee2e2; color: #991b1b; }
+        .bg-init { background: #e0f2fe; color: #0369a1; }
+        
+        .btn-sm { padding: 4px 8px; font-size: 11px; cursor: pointer; border-radius: 4px; border: 1px solid #cbd5e1; background: white; margin: 0 2px; }
+        .btn-copy { color: var(--info); border-color: var(--info); }
+        .btn-del { color: var(--warn); border-color: var(--warn); }
         #syncStatus { font-size: 12px; color: var(--safe); margin-left: 10px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>📦 보유재고 통합 관리 (SKE-00003) <span id="syncStatus">● 연결 확인 중...</span></h2>
+    <h2>📦 보유재고 관리 시스템 (SKE-00003) <span id="syncStatus">● 연결 중...</span></h2>
 
     <div id="dashboard" class="dashboard"></div>
 
     <div class="input-section">
         <div class="input-grid">
             <div class="field"><label>일자</label><input type="date" id="sDate"></div>
-            <div class="field"><label>분류</label><input type="text" id="sCategory" placeholder="분류명"></div>
-            <div class="field"><label>품목명</label><input type="text" id="sItem" placeholder="정확한 품목명"></div>
+            <div class="field"><label>분류</label><input type="text" id="sCategory" value="CABLE"></div>
+            <div class="field"><label>품목명</label><input type="text" id="sItem" placeholder="품목명"></div>
             <div class="field"><label>규격</label><input type="text" id="sSpec" placeholder="규격"></div>
             <div class="field"><label>구분</label>
                 <select id="sType">
-                    <option value="입고">➕ 입고</option>
                     <option value="출고">➖ 출고</option>
+                    <option value="입고">➕ 입고</option>
                     <option value="초기">🚀 초기이월</option>
                 </select>
             </div>
             <div class="field"><label>수량(M)</label><input type="number" id="sQty" value="1"></div>
-            <div class="field"><label>안전재고(M)</label><input type="number" id="sMinQty" value="100"></div>
-            <div class="field"><label>비고</label><input type="text" id="sRemark" placeholder="용도 등"></div>
+            <div class="field"><label>안전재고(M)</label><input type="number" id="sMinQty" value="500"></div>
+            <div class="field"><label>비고</label><input type="text" id="sRemark" placeholder="비고"></div>
             <button class="btn-add" onclick="addItem()">재고 기록 추가</button>
         </div>
     </div>
 
     <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: center;">
         <input type="text" id="searchItem" onkeyup="render()" placeholder="🔍 검색어 입력..." style="padding: 10px; width: 300px; border: 1px solid #cbd5e1; border-radius: 8px;">
-        <span style="font-size:12px; color:#64748b;">* 내용을 클릭하면 즉시 수정 가능합니다.</span>
         <div style="flex-grow: 1; text-align: right;">
             <button onclick="exportCSV()" style="padding:10px 15px; background:#059669; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">엑셀 저장</button>
         </div>
@@ -96,21 +97,64 @@
 <script>
     const DATABASE_URL = "https://ske-00003-default-rtdb.firebaseio.com/"; 
     const DB_PATH = DATABASE_URL + "stock_management.json";
-    const purchaser = { name: "구매 담당자님", email: "purchasing@example.com" };
 
     let stockData = [];
 
-    document.getElementById('sDate').value = new Date().toISOString().split('T')[0];
+    document.getElementById('sDate').value = new Date().toISOString().split('T'-[0]);
+
+    // [📍 표 데이터를 초기이월로 자동 등록하는 함수]
+    async function seedInitialStock() {
+        const initialTable = [
+            { item: "P1", spec: "14*4C", qty: 2680 },
+            { item: "A(3C)", spec: "16*3C", qty: 820 },
+            { item: "A(4C)", spec: "16*4C", qty: 19339 },
+            { item: "B", spec: "18*4C", qty: 18693 },
+            { item: "C", spec: "20*4C", qty: 5145 },
+            { item: "R", spec: "16*4C+22*2C", qty: 2450 },
+            { item: "N3", spec: "24*3T", qty: 3997 },
+            { item: "D", spec: "26*8PR", qty: 55566 },
+            { item: "-", spec: "", qty: 8113 },
+            { item: "N1", spec: "22*2PR", qty: 4630 },
+            { item: "N7", spec: "22*3PR", qty: 3530 },
+            { item: "E", spec: "26*5PR", qty: 1665 },
+            { item: "S", spec: "24*4P+26*4P", qty: 5610 },
+            { item: "DS", spec: "24*4P+26*4P(더블실드)", qty: 2718 },
+            { item: "I6", spec: "CAT6A", qty: 2008 },
+            { item: "K", spec: "22*2C", qty: 5340 }
+        ];
+
+        for (const data of initialTable) {
+            const seed = {
+                date: new Date().toISOString().split('T')[0],
+                category: "CABLE",
+                item: data.item,
+                spec: data.spec,
+                type: "초기",
+                qty: data.qty,
+                minQty: 500, // 기본 안전재고 500M 설정
+                remark: "시스템 기초데이터 자동로드",
+                timestamp: Date.now() + Math.random()
+            };
+            stockData.push(seed);
+        }
+        await saveData();
+    }
 
     async function loadData() {
         try {
             const response = await fetch(DB_PATH);
             const data = await response.json();
             stockData = data ? Object.values(data) : [];
+            
+            // 데이터가 아예 없으면 표 데이터를 자동으로 심어줌
+            if (stockData.length === 0) {
+                await seedInitialStock();
+            }
+            
             updateDashboard();
             render();
-            document.getElementById('syncStatus').innerText = "● 실시간 동기화 완료";
-        } catch (e) { document.getElementById('syncStatus').innerText = "○ 서버 연결 오류"; }
+            document.getElementById('syncStatus').innerText = "● 실시간 연결됨";
+        } catch (e) { document.getElementById('syncStatus').innerText = "○ 연결 오류"; }
     }
 
     function calculateStock() {
@@ -119,10 +163,21 @@
             if (!summary[item.item]) summary[item.item] = { current: 0, min: 0 };
             const q = Number(item.qty) || 0;
             if (item.type === '입고' || item.type === '초기') summary[item.item].current += q;
-            if (item.type === '출고') summary[item.item].current -= q;
+            else if (item.type === '출고') summary[item.item].current -= q;
             summary[item.item].min = Number(item.minQty) || 0; 
         });
         return summary;
+    }
+
+    function copyRow(idx) {
+        const item = stockData[idx];
+        document.getElementById('sCategory').value = item.category;
+        document.getElementById('sItem').value = item.item;
+        document.getElementById('sSpec').value = item.spec;
+        document.getElementById('sMinQty').value = item.minQty;
+        document.getElementById('sType').value = "출고"; // 복사 시 주로 출고 작업을 하므로 세팅
+        document.getElementById('sQty').focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function editCell(idx, field, element) {
@@ -131,49 +186,15 @@
         input.type = (field === 'qty' || field === 'minQty') ? 'number' : (field === 'date' ? 'date' : 'text');
         input.value = stockData[idx][field];
         input.className = 'edit-input';
-        
         element.innerHTML = '';
         element.appendChild(input);
         input.focus();
-
         input.onblur = async function() {
-            const newVal = (field === 'qty' || field === 'minQty') ? Number(input.value) : input.value;
-            stockData[idx][field] = newVal;
+            stockData[idx][field] = (field === 'qty' || field === 'minQty') ? Number(input.value) : input.value;
             await saveData();
         };
-
-        input.onkeydown = function(e) {
-            if(e.key === 'Enter') input.blur();
-        };
+        input.onkeydown = (e) => { if(e.key === 'Enter') input.blur(); };
     }
-
-    function sendRequestMail(itemName, current, min, event) {
-        event.stopPropagation();
-        const subject = encodeURIComponent(`[재고부족] ${itemName} 구매 요청`);
-        const body = encodeURIComponent(`안녕하세요.\n\n현재고(${current}M)가 안전재고(${min}M)보다 낮습니다. 확인 부탁드립니다.`);
-        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${purchaser.email}&su=${subject}&body=${body}`, '_blank');
-    }
-
-    function updateDashboard() {
-        const dash = document.getElementById('dashboard');
-        const summary = calculateStock();
-        dash.innerHTML = '';
-        Object.keys(summary).sort().forEach(name => {
-            const info = summary[name];
-            if (info.current <= info.min) {
-                dash.innerHTML += `
-                    <div class="dash-card" onclick="filterItem('${name}')">
-                        <button class="btn-gmail" onclick="sendRequestMail('${name}', ${info.current}, ${info.min}, event)">M 요청</button>
-                        <div class="dash-title">${name}</div>
-                        <div class="dash-qty">${info.current.toLocaleString()} <small style="font-size:12px;">M</small></div>
-                        <div style="font-size:11px; color:var(--warn); margin-top:5px;">⚠️ 기준: ${info.min}M</div>
-                    </div>
-                `;
-            }
-        });
-    }
-
-    function filterItem(name) { document.getElementById('searchItem').value = name; render(); }
 
     async function addItem() {
         const item = {
@@ -209,6 +230,7 @@
             if (item.item.toLowerCase().includes(filter) || item.category.toLowerCase().includes(filter)) {
                 const currentStock = summary[item.item].current;
                 const isLow = currentStock <= item.minQty;
+                const badgeClass = item.type === '입고' ? 'bg-in' : (item.type === '출고' ? 'bg-out' : 'bg-init');
 
                 body.innerHTML += `
                     <tr class="${isLow ? 'tr-low' : ''}">
@@ -216,24 +238,44 @@
                         <td class="editable" onclick="editCell(${originalIdx}, 'category', this)">${item.category}</td>
                         <td class="editable" style="font-weight:bold;" onclick="editCell(${originalIdx}, 'item', this)">${item.item}</td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'spec', this)">${item.spec}</td>
-                        <td><span class="badge ${item.type==='출고'?'bg-out':'bg-in'}">${item.type}</span></td>
+                        <td><span class="badge ${badgeClass}">${item.type}</span></td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'qty', this)">${item.qty.toLocaleString()}</td>
                         <td style="font-weight:900;">${currentStock.toLocaleString()}</td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'minQty', this)">${item.minQty.toLocaleString()}</td>
                         <td class="editable" onclick="editCell(${originalIdx}, 'remark', this)">${item.remark}</td>
-                        <td><button onclick="deleteItem(${originalIdx})" style="cursor:pointer;">삭제</button></td>
+                        <td>
+                            <button class="btn-sm btn-copy" onclick="copyRow(${originalIdx})">복사</button>
+                            <button class="btn-sm btn-del" onclick="deleteItem(${originalIdx})">삭제</button>
+                        </td>
                     </tr>
                 `;
             }
         });
     }
 
+    function updateDashboard() {
+        const dash = document.getElementById('dashboard');
+        const summary = calculateStock();
+        dash.innerHTML = '';
+        Object.keys(summary).sort().forEach(name => {
+            const info = summary[name];
+            if (info.current <= info.min) {
+                dash.innerHTML += `
+                    <div class="dash-card" onclick="filterItem('${name}')">
+                        <div class="dash-title">${name}</div>
+                        <div class="dash-qty">${info.current.toLocaleString()} <small>M</small></div>
+                        <div style="font-size:11px; color:var(--warn); margin-top:5px;">⚠️ 기준: ${info.min}M</div>
+                    </div>
+                `;
+            }
+        });
+    }
+
+    function filterItem(name) { document.getElementById('searchItem').value = name; render(); }
     async function deleteItem(idx) { if(confirm("삭제하시겠습니까?")) { stockData.splice(idx, 1); await saveData(); } }
     function exportCSV() {
         let csv = "\uFEFF일자,분류,품목명,규격,구분,수량,비고\n";
-        stockData.forEach(item => {
-            csv += `"${item.date}","${item.category}","${item.item}","${item.spec}","${item.type}",${item.qty},"${item.remark}"\n`;
-        });
+        stockData.forEach(item => { csv += `"${item.date}","${item.category}","${item.item}","${item.spec}","${item.type}",${item.qty},"${item.remark}"\n`; });
         const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
         const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `재고현황.csv`; a.click();
     }
