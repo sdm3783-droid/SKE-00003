@@ -8,7 +8,7 @@
         :root { --primary: #0f172a; --bg: #f1f5f9; --blue: #1e40af; --red: #dc2626; --green: #059669; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); padding: 0; color: #1e293b; margin: 0; }
         
-        /* 네비게이션 탭 */
+        /* 네비게이션 */
         .nav-bar { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .nav-btn { flex: 1; padding: 15px 0; border: none; background: none; color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 14px; }
         .nav-btn.active { color: white; border-bottom: 4px solid var(--blue); background: rgba(255,255,255,0.1); }
@@ -17,40 +17,34 @@
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        /* 공통 스타일 */
+        /* 입력 폼 */
         .input-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 20px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
-        input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; }
+        input, select { padding: 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 14px; width: 100%; box-sizing: border-box; color: #000; }
         .btn-main { background: var(--blue); color: white; border: none; padding: 15px; border-radius: 8px; width: 100%; margin-top: 10px; font-weight: bold; cursor: pointer; }
         
-        /* 대시보드 (통합재고용) */
+        /* 대시보드 */
         .dashboard { display: flex; gap: 10px; overflow-x: auto; margin-bottom: 20px; padding: 10px 0; }
-        .dash-card { min-width: 250px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; flex: 1; }
-        .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .st-btn { padding: 10px; border-radius: 8px; text-align: center; font-weight: bold; cursor: pointer; font-size: 13px; border: none; }
+        .dash-card { min-width: 280px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; flex: 1; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
 
-        /* 테이블 공통 */
+        /* 테이블 및 모바일 카드 */
         .table-wrapper { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; min-width: 900px; }
         th { background: #f1f5f9; padding: 12px; border: 1px solid #ccc; font-size: 12px; }
-        td { padding: 12px 8px; border: 1px solid #eee; text-align: center; font-size: 13px; font-weight: 600; }
-
-        /* 사급자재 전용 스타일 */
-        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; }
-        .status-none { background: #fee2e2; color: #991b1b; }
-        .status-full { background: #dcfce7; color: #166534; }
-        .btn-mail { background: #ef4444; color: white; border: none; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
+        td { padding: 12px 8px; border: 1px solid #eee; text-align: center; font-size: 14px; font-weight: 700; color: #000; }
 
         @media screen and (max-width: 768px) {
-            table, thead, tbody, th, td, tr { display: block; }
+            table, thead, tbody, th, td, tr { display: block; width: 100%; }
             thead tr { position: absolute; top: -9999px; }
-            tr { border: 2px solid #ddd; border-radius: 12px; margin-bottom: 15px; padding: 10px; background: #fff !important; }
-            td { border: none !important; position: relative; padding-left: 45% !important; text-align: right !important; border-bottom: 1px solid #f1f5f9 !important; display: block !important; }
-            td:before { position: absolute; left: 12px; font-weight: 900; color: #666; font-size: 11px; content: attr(data-label); text-align: left; }
+            tr { border: 2px solid #ddd; border-radius: 12px; margin-bottom: 15px; padding: 12px; background: #fff !important; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+            td { border: none !important; position: relative; padding: 12px 12px 12px 45% !important; text-align: right !important; border-bottom: 1px dashed #ddd !important; display: flex !important; align-items: center; justify-content: flex-end; min-height: 40px; }
+            td:before { position: absolute; left: 12px; font-weight: 900; color: #475569; font-size: 12px; content: attr(data-label); text-align: left; width: 40%; }
+            td:last-child { border-bottom: none !important; }
         }
 
-        .lvl-red { border-left: 8px solid #ef4444; background: #fff1f2 !important; }
-        .lvl-orange { border-left: 8px solid #f97316; background: #fff7ed !important; }
+        .status-badge { padding: 4px 10px; border-radius: 15px; font-size: 11px; font-weight: bold; border: 1px solid #000; }
+        .bg-none { background: #fee2e2; color: #991b1b; }
+        .bg-full { background: #dcfce7; color: #166534; }
     </style>
 </head>
 <body>
@@ -62,44 +56,39 @@
 
 <div class="container">
     <div id="page-stock" class="page-content active">
-        <h2>📊 통합 재고 현황 (SKE-0003)</h2>
-        <div id="stock-dash" class="dashboard"></div>
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="st-date">
-                <input type="text" id="st-parent" value="CABLE">
                 <input type="text" id="st-item" placeholder="품목명">
                 <input type="text" id="st-spec" placeholder="규격">
-                <select id="st-type"><option value="입고">입고</option><option value="출고">출고</option></select>
+                <select id="st-type"><option value="입고">입고 (+)</option><option value="출고">출고 (-)</option></select>
                 <input type="number" id="st-qty" value="0">
             </div>
-            <button class="btn-main" onclick="addStock()">재고 데이터 저장</button>
+            <button class="btn-main" onclick="addStock()">재고 저장</button>
         </div>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>일자</th><th>상위</th><th>품목(이력)</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
+                <thead><tr><th>일자</th><th>품목</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
                 <tbody id="stock-body"></tbody>
             </table>
         </div>
     </div>
 
     <div id="page-materials" class="page-content">
-        <h2>🏗️ 사급자재 관리 (SKE-0001)</h2>
-        <div id="ma-dash" class="dashboard"></div>
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="ma-date">
                 <input type="text" id="ma-project" placeholder="프로젝트명">
                 <input type="text" id="ma-vendor" placeholder="업체명">
                 <input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요">
-                <input type="number" id="ma-recv" placeholder="입고">
+                <input type="number" id="ma-req" placeholder="필요수량">
+                <input type="number" id="ma-recv" placeholder="입고수량">
             </div>
-            <button class="btn-main" onclick="addMaterial()">사급자재 현황 등록</button>
+            <button class="btn-main" onclick="addMaterial()">사급자재 등록</button>
         </div>
         <div class="table-wrapper">
             <table>
-                <thead><tr><th>등록일자</th><th>프로젝트</th><th>업체명</th><th>자재명</th><th>필요</th><th>입고</th><th>상태</th><th>메일</th><th>관리</th></tr></thead>
+                <thead><tr><th>일자</th><th>프로젝트</th><th>업체명</th><th>자재명</th><th>필요</th><th>입고</th><th>상태</th><th>관리</th></tr></thead>
                 <tbody id="ma-body"></tbody>
             </table>
         </div>
@@ -107,9 +96,8 @@
 </div>
 
 <script>
-    // 🔗 [핵심] 사용자님의 실제 데이터 주소 연결
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
-    const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json"; // 💡 inventory.json 으로 수정!
+    const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
 
     let stockData = [];
     let materialData = [];
@@ -122,7 +110,6 @@
         if(page === 'stock') loadStock(); else loadMaterials();
     }
 
-    // --- 통합재고 로직 ---
     async function loadStock() {
         const res = await fetch(STOCK_URL);
         const data = await res.json();
@@ -132,76 +119,56 @@
 
     function renderStock() {
         const body = document.getElementById('stock-body');
-        const summary = {}; // 현재고 계산
+        const summary = {};
         stockData.forEach(d => {
             const k = d.item + "|" + d.spec;
             if(!summary[k]) summary[k] = 0;
             summary[k] += (d.type === '입고' ? Number(d.qty) : -Number(d.qty));
         });
-
         body.innerHTML = stockData.sort((a,b)=>b.timestamp-a.timestamp).map(d => {
             const cur = summary[d.item + "|" + d.spec] || 0;
-            const lvl = cur < 3000 ? 'lvl-red' : (cur < 5000 ? 'lvl-orange' : '');
-            return `<tr class="${lvl}">
+            return `<tr>
                 <td data-label="일자">${d.date}</td>
-                <td data-label="상위">${d.parent}</td>
                 <td data-label="품목">${d.item}</td>
                 <td data-label="규격">${d.spec}</td>
                 <td data-label="구분">${d.type}</td>
-                <td data-label="수량">${d.qty}</td>
-                <td data-label="현재고">${cur}</td>
+                <td data-label="수량">${Number(d.qty).toLocaleString()}</td>
+                <td data-label="현재고">${cur.toLocaleString()}</td>
                 <td data-label="상태">${cur < 3000 ? '🔴경고':'🟢양호'}</td>
-                <td><button onclick="deleteData('stock', ${d.timestamp})" style="color:red; border:none; background:none;">삭제</button></td>
+                <td data-label="관리"><button onclick="deleteData('stock', ${d.timestamp})" style="color:red; border:none; background:none; font-weight:bold;">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 사급자재 로직 ---
     async function loadMaterials() {
         const res = await fetch(MATERIAL_URL);
         const data = await res.json();
         materialData = data ? Object.values(data) : [];
         renderMaterials();
-        updateMaDash();
-    }
-
-    function updateMaDash() {
-        const dash = document.getElementById('ma-dash');
-        const vMap = {};
-        materialData.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0 };
-            vMap[m.vendor].total++;
-            if(m.inQty >= m.targetQty) vMap[m.vendor].ok++;
-        });
-        dash.innerHTML = Object.keys(vMap).map(v => `
-            <div class="dash-card">
-                <b>${v}</b><br>
-                진행율: ${Math.round((vMap[v].ok/vMap[v].total)*100)}%
-            </div>
-        `).join('');
     }
 
     function renderMaterials() {
         const body = document.getElementById('ma-body');
         body.innerHTML = materialData.sort((a,b)=>b.timestamp-a.timestamp).map(m => {
-            const status = m.inQty >= m.targetQty ? '완료' : '미입고';
+            // SKE-001 기존 데이터 구조 필드 매칭 (targetQty, inQty)
+            const req = m.targetQty || m.req || 0;
+            const recv = m.inQty || m.recv || 0;
+            const status = recv >= req ? '완료' : '미입고';
             return `<tr>
                 <td data-label="일자">${m.regDate || m.date}</td>
                 <td data-label="프로젝트">${m.project}</td>
-                <td data-label="업체">${m.vendor}</td>
-                <td data-label="자재">${m.item}</td>
-                <td data-label="필요">${m.targetQty || m.req}</td>
-                <td data-label="입고">${m.inQty || m.recv}</td>
-                <td data-label="상태"><span class="status-badge ${status==='완료'?'status-full':'status-none'}">${status}</span></td>
-                <td><button class="btn-mail" onclick="alert('Gmail 독촉 메일 기능 작동')">메일</button></td>
-                <td><button onclick="deleteData('material', ${m.timestamp})" style="color:red; border:none; background:none;">삭제</button></td>
+                <td data-label="업체명">${m.vendor}</td>
+                <td data-label="자재명">${m.item}</td>
+                <td data-label="필요수량">${Number(req).toLocaleString()}</td>
+                <td data-label="입고수량">${Number(recv).toLocaleString()}</td>
+                <td data-label="상태"><span class="status-badge ${status==='완료'?'bg-full':'bg-none'}">${status}</span></td>
+                <td data-label="관리"><button onclick="deleteData('material', ${m.timestamp})" style="color:red; border:none; background:none; font-weight:bold;">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // 데이터 저장 및 삭제 공통
     async function addStock() {
-        const item = { date: document.getElementById('st-date').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: Date.now() };
+        const item = { date: document.getElementById('st-date').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: Date.now() };
         stockData.push(item);
         await fetch(STOCK_URL, { method: 'PUT', body: JSON.stringify(stockData) });
         loadStock();
@@ -216,19 +183,15 @@
 
     async function deleteData(type, ts) {
         if(!confirm("삭제할까요?")) return;
-        if(type === 'stock') {
-            stockData = stockData.filter(d => d.timestamp !== ts);
-            await fetch(STOCK_URL, { method: 'PUT', body: JSON.stringify(stockData) }); loadStock();
-        } else {
-            materialData = materialData.filter(d => d.timestamp !== ts);
-            await fetch(MATERIAL_URL, { method: 'PUT', body: JSON.stringify(materialData) }); loadMaterials();
-        }
+        const url = type === 'stock' ? STOCK_URL : MATERIAL_URL;
+        let data = type === 'stock' ? stockData : materialData;
+        data = data.filter(d => d.timestamp !== ts);
+        await fetch(url, { method: 'PUT', body: JSON.stringify(data) });
+        if(type === 'stock') loadStock(); else loadMaterials();
     }
 
-    // 초기 실행
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('st-date').value = today;
-    document.getElementById('ma-date').value = today;
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
     loadStock();
 </script>
 </body>
