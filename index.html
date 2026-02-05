@@ -3,94 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE 통합 관리 시스템</title>
+    <title>SKE ERP - 전사 통합 관리 시스템</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
         :root { 
-            --primary: #0f172a; --bg: #f8fafc; --card: #ffffff;
-            --blue: #2563eb; --red: #dc2626; --orange: #f97316; --yellow: #eab308; --green: #10b981;
-            --text-main: #1e293b; --text-sub: #64748b; --border: #e2e8f0;
+            --erp-primary: #1e293b; /* 다크 네이비 */
+            --erp-accent: #3b82f6;  /* 기업용 블루 */
+            --erp-bg: #f8fafc;     /* 매우 연한 회색 배경 */
+            --erp-card: #ffffff;
+            --erp-border: #e2e8f0;
+            --erp-text: #334155;
+            --erp-text-light: #64748b;
+            
+            /* 상태 색상 (부드러운 톤으로 변경) */
+            --status-red: #ef4444;
+            --status-orange: #f59e0b;
+            --status-yellow: #eab308;
+            --status-green: #10b981;
         }
         
-        body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 0; color: var(--text-main); }
+        body { 
+            font-family: 'Pretendard', sans-serif; 
+            background: var(--erp-bg); 
+            margin: 0; padding: 0; 
+            color: var(--erp-text);
+            letter-spacing: -0.01em;
+        }
         
-        /* Nav Bar */
-        .nav-bar { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-        .nav-btn { flex: 1; padding: 18px 0; border: none; background: none; color: #94a3b8; font-weight: 700; cursor: pointer; font-size: 15px; transition: 0.3s; }
-        .nav-btn.active { color: white; background: rgba(255,255,255,0.05); box-shadow: inset 0 -4px 0 var(--blue); }
+        /* 🏢 ERP 상단 네비게이션 */
+        .erp-header { 
+            background: var(--erp-primary); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 40px;
+            height: 64px;
+            position: sticky; top: 0; z-index: 2000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .erp-logo { color: white; font-weight: 900; font-size: 20px; margin-right: 60px; letter-spacing: 1px; }
+        .nav-group { display: flex; height: 100%; }
+        .nav-btn { 
+            background: none; border: none; color: #94a3b8; 
+            font-weight: 700; font-size: 15px; padding: 0 25px;
+            cursor: pointer; transition: 0.3s; position: relative;
+        }
+        .nav-btn.active { color: white; background: rgba(255,255,255,0.05); }
+        .nav-btn.active::after { 
+            content: ''; position: absolute; bottom: 0; left: 0; 
+            width: 100%; height: 4px; background: var(--erp-accent); 
+        }
 
-        .container { max-width: 1600px; margin: auto; padding: 20px; box-sizing: border-box; }
+        .container { max-width: 1600px; margin: 30px auto; padding: 0 40px; box-sizing: border-box; }
         .page-content { display: none; }
         .page-content.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-        /* Dashboard Cards */
-        .dash-container { display: flex; gap: 16px; overflow-x: auto; margin-bottom: 24px; padding: 4px; scrollbar-width: none; }
+        /* 📊 ERP 카드 대시보드 */
+        .dash-container { display: flex; gap: 20px; overflow-x: auto; margin-bottom: 30px; padding-bottom: 10px; }
         .dash-card { 
-            min-width: 280px; background: var(--card); border-radius: 16px; padding: 20px; 
-            border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); cursor: pointer; transition: 0.2s; position: relative;
+            min-width: 320px; background: var(--erp-card); border-radius: 12px; padding: 24px; 
+            border: 1px solid var(--erp-border); box-shadow: 0 1px 2px rgba(0,0,0,0.05); 
+            cursor: pointer; transition: 0.2s; position: relative;
         }
-        .dash-card:hover { transform: translateY(-4px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--blue); }
-        .card-label { font-size: 13px; color: var(--text-sub); font-weight: 600; margin-bottom: 8px; display: block; }
-        .card-title { font-size: 20px; font-weight: 800; margin-bottom: 12px; display: block; }
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .st-btn { border: none; padding: 10px; border-radius: 10px; font-weight: 800; font-size: 12px; cursor: pointer; color: white; display: flex; justify-content: space-between; }
+        .dash-card:hover { border-color: var(--erp-accent); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .card-type { font-size: 12px; color: var(--erp-text-light); font-weight: 800; margin-bottom: 6px; text-transform: uppercase; }
+        .card-title { font-size: 18px; font-weight: 800; color: var(--erp-primary); margin-bottom: 16px; display: block; }
         
-        /* Input & Form */
-        .input-section { background: var(--card); padding: 20px; border-radius: 16px; margin-bottom: 20px; border: 1px solid var(--border); }
-        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
-        input, select { padding: 12px; border: 1px solid var(--border); border-radius: 10px; font-size: 14px; font-weight: 600; width: 100%; box-sizing: border-box; background: #fff; }
-        .btn-primary { background: var(--blue); color: white; border: none; padding: 12px 24px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .st-btn { 
+            border: 1px solid var(--erp-border); padding: 10px; border-radius: 8px; 
+            font-weight: 800; font-size: 13px; cursor: pointer; background: #fff;
+            display: flex; justify-content: space-between; transition: 0.2s;
+        }
+        .st-btn:hover { background: #f1f5f9; }
 
-        /* Search & Table */
-        .search-area { display: flex; gap: 10px; margin-bottom: 20px; }
-        .search-input { flex: 1; padding: 14px 20px; border: 2px solid var(--border); border-radius: 12px; font-weight: 700; font-size: 15px; }
-        .table-wrapper { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
-        table { width: 100%; border-collapse: collapse; min-width: 1000px; }
-        th { background: #f8fafc; padding: 14px; text-align: center; font-size: 12px; font-weight: 700; color: var(--text-sub); border-bottom: 1px solid var(--border); }
-        td { padding: 16px 14px; text-align: center; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600; }
+        /* 📝 ERP 입력 섹션 */
+        .section-header { font-size: 16px; font-weight: 800; margin-bottom: 15px; color: var(--erp-primary); display: flex; align-items: center; }
+        .section-header::before { content: ''; width: 4px; height: 16px; background: var(--erp-accent); margin-right: 10px; border-radius: 2px; }
+
+        .input-section { background: #fff; padding: 24px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--erp-border); }
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; }
+        .input-group label { display: block; font-size: 12px; font-weight: 800; color: var(--erp-text-light); margin-bottom: 6px; }
+        input, select { 
+            padding: 10px 12px; border: 1px solid var(--erp-border); border-radius: 6px; 
+            font-size: 14px; font-weight: 600; color: var(--erp-text); background: #fcfcfc;
+        }
+        input:focus { border-color: var(--erp-accent); outline: none; background: #fff; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1); }
         
-        /* Badges & Actions */
-        .badge { padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
-        .badge-delay { background: #fee2e2; color: #b91c1c; margin-right: 5px; }
-        .editable { cursor: pointer; text-decoration: underline; color: var(--blue); transition: 0.2s; }
-        .editable:hover { color: var(--primary); background: #f1f5f9; }
-        .gmail-btn { position: absolute; top: 15px; right: 15px; background: var(--red); color: white; border: none; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; cursor: pointer; }
+        .btn-erp { 
+            background: var(--erp-accent); color: white; border: none; 
+            padding: 10px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; 
+            height: 40px; margin-top: auto; transition: 0.2s;
+        }
+        .btn-erp:hover { background: #2563eb; }
+
+        /* 🔍 검색 및 테이블 */
+        .toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .search-box { display: flex; gap: 10px; width: 400px; }
+        .search-box input { flex: 1; padding: 8px 15px; border-radius: 20px; border: 1px solid var(--erp-border); }
+
+        .table-container { background: #fff; border-radius: 12px; border: 1px solid var(--erp-border); overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 1100px; }
+        th { background: #f8fafc; padding: 14px; text-align: center; font-size: 12px; font-weight: 700; color: var(--erp-text-light); border-bottom: 1px solid var(--erp-border); }
+        td { padding: 14px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
+        tr:hover { background: #f8fafc; }
+
+        /* 🏷️ ERP 전용 배지 */
+        .badge { padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 800; display: inline-block; }
+        .badge-delay { background: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+        .badge-success { background: #dcfce7; color: #15803d; }
+        .badge-warn { background: #fefce8; color: #854d0e; }
         
-        /* Modal */
-        .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); }
-        .modal-content { background: white; margin: 5vh auto; padding: 30px; border-radius: 24px; width: 90%; max-width: 900px; max-height: 85vh; overflow-y: auto; position: relative; }
-        .close-modal { position: absolute; right: 25px; top: 20px; font-size: 24px; cursor: pointer; color: var(--text-sub); }
+        .item-link { color: var(--erp-accent); text-decoration: none; font-weight: 800; cursor: pointer; }
+        .item-link:hover { text-decoration: underline; }
+        .btn-text { background: none; border: none; color: var(--erp-accent); font-weight: 800; cursor: pointer; font-size: 13px; margin: 0 5px; }
+        .btn-gmail { background: #ea4335; color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 11px; font-weight: 800; cursor: pointer; float: right; }
+
+        /* 📍 모달 팝업 */
+        .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.7); backdrop-filter: blur(4px); }
+        .modal-body { background: white; margin: 5vh auto; padding: 35px; border-radius: 16px; width: 80%; max-width: 850px; position: relative; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
+        .close-btn { position: absolute; right: 25px; top: 20px; font-size: 24px; cursor: pointer; color: var(--erp-text-light); }
+
+        .progress-shell { width: 100%; height: 6px; background: #e2e8f0; border-radius: 10px; overflow: hidden; margin-top: 10px; }
+        .progress-bar { height: 100%; background: var(--erp-accent); transition: 0.5s; }
     </style>
 </head>
 <body>
 
-<nav class="nav-bar">
-    <button id="nav-stock" class="nav-btn active" onclick="switchPage('stock')">📦 통합재고 관리</button>
-    <button id="nav-materials" class="nav-btn" onclick="switchPage('materials')">⚙️ 사급자재 관리</button>
-</nav>
+<header class="erp-header">
+    <div class="erp-logo">SKE SYSTEM v2.0</div>
+    <div class="nav-group">
+        <button id="nav-stock" class="nav-btn active" onclick="switchPage('stock')">통합 재고 관리</button>
+        <button id="nav-materials" class="nav-btn" onclick="switchPage('materials')">사급 자재 현황</button>
+    </div>
+</header>
 
 <div class="container">
     <div id="page-stock" class="page-content active">
         <div id="stock-dash" class="dash-container"></div>
+        
+        <div class="section-header">재고 수불 등록</div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="st-date">
-                <select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
-                <input type="text" id="st-item" placeholder="품목명">
-                <input type="text" id="st-spec" placeholder="규격">
-                <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option><option value="초기">🚀 초기</option></select>
-                <input type="number" id="st-qty" value="0">
-                <button class="btn-primary" onclick="addData('stock')">저장하기</button>
+                <div class="input-group"><label>등록일자</label><input type="date" id="st-date"></div>
+                <div class="input-group"><label>분류</label><select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select></div>
+                <div class="input-group"><label>품목명</label><input type="text" id="st-item" placeholder="품목 입력"></div>
+                <div class="input-group"><label>규격</label><input type="text" id="st-spec" placeholder="규격 입력"></div>
+                <div class="input-group"><label>구분</label><select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option><option value="초기">🚀 초기</option></select></div>
+                <div class="input-group"><label>수량</label><input type="number" id="st-qty" value="0"></div>
+                <button class="btn-erp" onclick="addData('stock')">데이터 저장</button>
             </div>
         </div>
-        <div class="search-area">
-            <input type="text" id="st-search" class="search-input" oninput="clearStockFilter(); renderStock();" placeholder="🔍 품목명 또는 규격 검색...">
-            <button class="btn-reset" onclick="resetUI('stock')" style="padding:0 20px; border-radius:12px; border:1px solid #ddd; cursor:pointer;">🔄 초기화</button>
+
+        <div class="toolbar">
+            <div class="section-header">재고 마스터 리스트</div>
+            <div class="search-box">
+                <input type="text" id="st-search" oninput="clearStockFilter(); renderStock();" placeholder="품목 또는 규격 검색...">
+                <button class="btn-text" onclick="resetUI('stock')">새로고침</button>
+            </div>
         </div>
-        <div class="table-wrapper">
+
+        <div class="table-container">
             <table>
-                <thead><tr><th>분류</th><th>품목명 (이력보기)</th><th>규격</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
+                <thead><tr><th>분류</th><th>품목명 (이력조회)</th><th>규격</th><th>현재고 수량</th><th>재고 상태</th><th>작업</th></tr></thead>
                 <tbody id="stock-table-body"></tbody>
             </table>
         </div>
@@ -98,32 +174,50 @@
 
     <div id="page-materials" class="page-content">
         <div id="ma-dash" class="dash-container"></div>
+
+        <div class="section-header">사급 자재 발주 등록</div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="ma-date">
-                <input type="text" id="ma-project" placeholder="프로젝트명">
-                <input type="text" id="ma-order" placeholder="발주번호">
-                <input type="text" id="ma-vendor" placeholder="업체명">
-                <input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요량">
-                <input type="number" id="ma-recv" placeholder="입고량">
-                <button class="btn-primary" onclick="addData('material')">등록하기</button>
+                <div class="input-group"><label>발주일자</label><input type="date" id="ma-date"></div>
+                <div class="input-group"><label>프로젝트</label><input type="text" id="ma-project"></div>
+                <div class="input-group"><label>발주번호</label><input type="text" id="ma-order"></div>
+                <div class="input-group"><label>협력업체</label><input type="text" id="ma-vendor"></div>
+                <div class="input-group"><label>자재명</label><input type="text" id="ma-item"></div>
+                <div class="input-group"><label>필요수량</label><input type="number" id="ma-req"></div>
+                <div class="input-group"><label>입고수량</label><input type="number" id="ma-recv"></div>
+                <button class="btn-erp" onclick="addData('material')">발주 등록</button>
             </div>
         </div>
-        <div class="search-area">
-            <input type="text" id="ma-search" class="search-input" oninput="renderMaterials();" placeholder="🔍 업체명, 프로젝트, 자재명 검색...">
-            <button class="btn-reset" onclick="resetUI('material')" style="padding:0 20px; border-radius:12px; border:1px solid #ddd; cursor:pointer;">🔄 초기화</button>
+
+        <div class="toolbar">
+            <div class="section-header">협력사별 입고 현황</div>
+            <div class="search-box">
+                <input type="text" id="ma-search" oninput="renderMaterials();" placeholder="업체명, 프로젝트 검색...">
+                <button class="btn-text" onclick="resetUI('material')">새로고침</button>
+            </div>
         </div>
-        <div class="table-wrapper">
+
+        <div class="table-container">
             <table>
-                <thead><tr><th>등록일</th><th>프로젝트</th><th>발주번호</th><th>업체명</th><th>자재명</th><th>필요</th><th>입고</th><th>상태</th><th>관리</th></tr></thead>
+                <thead><tr><th>발주일</th><th>프로젝트</th><th>발주번호</th><th>협력업체</th><th>자재품명</th><th>필요</th><th>입고</th><th>입고상태</th><th>작업</th></tr></thead>
                 <tbody id="ma-table-body"></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<div id="historyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal()">&times;</span><h2 id="modalTitle">상세 이력</h2><div class="table-wrapper"><table style="min-width:100%"><thead><tr><th>날짜</th><th>구분</th><th>수량</th><th>관리</th></tr></thead><tbody id="history-table-body"></tbody></table></div></div></div>
+<div id="historyModal" class="erp-modal">
+    <div class="modal-body">
+        <span class="close-btn" onclick="closeModal()">&times;</span>
+        <div id="modalTitle" style="font-size:18px; font-weight:900; color:var(--erp-primary); margin-bottom:20px;"></div>
+        <div class="table-container">
+            <table>
+                <thead><tr><th>처리일시</th><th>구분</th><th>변동수량</th><th>관리</th></tr></thead>
+                <tbody id="history-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
 
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
@@ -132,16 +226,15 @@
     let db = { stock: [], material: [] };
     let filters = { stock: { parent: '', level: '' } };
 
-    async function loadAll() { await loadStock(); await loadMaterials(); }
-
     function switchPage(page) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('page-' + page).classList.add('active');
         document.getElementById('nav-' + page).classList.add('active');
+        page === 'stock' ? loadStock() : loadMaterials();
     }
 
-    // --- 📦 통합재고 로직 ---
+    // --- 📦 통합재고 엔진 ---
     async function loadStock() {
         const res = await fetch(STOCK_URL);
         db.stock = Object.values(await res.json() || {});
@@ -162,31 +255,29 @@
         const summary = calculateStockSummary();
         const stats = {};
         Object.values(summary).forEach(s => {
-            if(!stats[s.parent]) stats[s.parent] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 };
             const p = s.parent.toUpperCase();
+            if(!stats[p]) stats[p] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 };
             const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
             let txt = '양호';
-            if (s.current < limit[0]) txt = '경고';
-            else if (s.current < limit[1]) txt = '주의';
-            else if (s.current < limit[2]) txt = '부족';
-            stats[s.parent][txt]++;
+            if (s.current < limit[0]) txt = '경고'; else if (s.current < limit[1]) txt = '주의'; else if (s.current < limit[2]) txt = '부족';
+            stats[p][txt]++;
         });
 
         document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
             <div class="dash-card">
-                <span class="card-label">CATEGORY</span><span class="card-title">${p} 현황</span>
+                <div class="card-type">Category Dashboard</div>
+                <div class="card-title">${p} 재고 상태</div>
                 <div class="status-grid">
                     ${['경고','주의','부족','양호'].map(l => {
-                        const colors = { '경고':'#fee2e2', '주의':'#fff7ed', '부족':'#fefce8', '양호':'#f0fdf4' };
-                        const tColors = { '경고':'#b91c1c', '주의':'#c2410c', '부족':'#a16207', '양호':'#15803d' };
-                        return `<button class="st-btn" style="background:${colors[l]}; color:${tColors[l]}" onclick="applyStockFilter('${p}', '${l}')">${l} <span>${stats[p][l]}</span></button>`;
+                        const tColors = { '경고':'#dc2626', '주의':'#d97706', '부족':'#b45309', '양호':'#059669' };
+                        return `<button class="st-btn" style="color:${tColors[l]}" onclick="applyStockFilter('${p}', '${l}')">${l} <span>${stats[p][l]}</span></button>`;
                     }).join('')}
                 </div>
             </div>`).join('');
     }
 
-    function applyStockFilter(p, l) { filters.stock = { parent: p, level: l }; document.getElementById('st-search').value = `${p} / ${l} 필터 중`; renderStock(); }
-    function clearStockFilter() { if(!document.getElementById('st-search').value.includes('/')) filters.stock = { parent:'', level:'' }; }
+    function applyStockFilter(p, l) { filters.stock = { parent: p, level: l }; document.getElementById('st-search').value = `[${p}] ${l} 품목 필터링 중`; renderStock(); }
+    function clearStockFilter() { if(!document.getElementById('st-search').value.includes('[')) filters.stock = { parent:'', level:'' }; }
 
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
@@ -196,20 +287,24 @@
             const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
             let lv = { txt: '양호', ico: '🟢', color: '#10b981' };
             if (s.current < limit[0]) lv = { txt: '경고', ico: '🔴', color: '#ef4444' };
-            else if (s.current < limit[1]) lv = { txt: '주의', ico: '🟠', color: '#f97316' };
+            else if (s.current < limit[1]) lv = { txt: '주의', ico: '🟠', color: '#f59e0b' };
             else if (s.current < limit[2]) lv = { txt: '부족', ico: '🟡', color: '#eab308' };
 
             if(filters.stock.parent && (s.parent !== filters.stock.parent || lv.txt !== filters.stock.level)) return '';
             if(!filters.stock.parent && search && !(`${s.name}${s.spec}${s.parent}`.toUpperCase().includes(search))) return '';
             
-            return `<tr><td><span class="badge" style="background:#f1f5f9">${s.parent}</span></td>
-            <td class="item-link" onclick="openHistory('${s.name}', '${s.spec}')">${s.name}</td><td>${s.spec || '-'}</td>
-            <td style="color:var(--blue)">${s.current.toLocaleString()}</td><td style="color:${lv.color}">${lv.ico} ${lv.txt}</td>
-            <td><button onclick="copyRow('stock', '${s.name}', '${s.spec}', '${s.parent}')">출고복사</button></td></tr>`;
+            return `<tr>
+                <td><span class="badge" style="background:#f1f5f9; color:#475569">${s.parent}</span></td>
+                <td><a class="item-link" onclick="openHistory('${s.name}', '${s.spec}')">${s.name}</a></td>
+                <td>${s.spec || '-'}</td>
+                <td style="color:var(--erp-accent); font-weight:800;">${s.current.toLocaleString()}</td>
+                <td style="color:${lv.color}; font-weight:800;">${lv.ico} ${lv.txt}</td>
+                <td><button class="btn-text" onclick="copyRow('stock', '${s.name}', '${s.spec}', '${s.parent}')">출고복사</button></td>
+            </tr>`;
         }).join('');
     }
 
-    // --- ⚙️ 사급자재 로직 ---
+    // --- ⚙️ 사급자재 엔진 (Gmail 표 형식) ---
     async function loadMaterials() {
         const res = await fetch(MATERIAL_URL);
         db.material = Object.values(await res.json() || {});
@@ -217,104 +312,106 @@
     }
 
     function updateMaDash() {
-        const vMap = {};
+        const vMap = {}; const today = new Date();
         db.material.forEach(m => {
             if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
             const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
             vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
-            const diff = (new Date() - new Date(m.regDate || m.date)) / (1000*60*60*24);
+            const diff = (today - new Date(m.regDate || m.date)) / (1000*60*60*24);
             if(!isOk && diff >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
         });
 
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok/vMap[v].total)*100) || 0;
             const dList = vMap[v].delayed;
-            return `<div class="dash-card" onclick="applyMaFilter('${v}')">
-                <span class="card-label">VENDOR</span>
-                ${dList.length > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(dList).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
-                <span class="card-title">${v}</span>
-                <span style="font-size:13px; color:var(--text-sub)">완료 ${vMap[v].ok} / 전체 ${vMap[v].total} (${per}%)</span>
-                <div class="progress-bar"><div class="progress-val" style="width:${per}%; background:${per===100?'var(--green)':'var(--blue)'}"></div></div>
-                ${dList.length > 0 ? `<div style="margin-top:10px; color:var(--red); font-size:12px; font-weight:800;">⚠️ 지연 ${dList.length}건</div>` : ''}
+            return `
+            <div class="dash-card" onclick="applyMaFilter('${v}')">
+                <div class="card-type">Vendor Dashboard</div>
+                <button class="btn-gmail" onclick="sendGmailTable('${v}', ${JSON.stringify(dList).replace(/"/g, '&quot;')})">Gmail 독촉</button>
+                <div class="card-title">${v}</div>
+                <div style="display:flex; justify-content:space-between; align-items:flex-end;">
+                    <span style="font-size:13px; color:var(--erp-text-light)">입고율: ${vMap[v].ok}/${vMap[v].total}</span>
+                    <span style="font-weight:900; color:var(--erp-accent)">${per}%</span>
+                </div>
+                <div class="progress-shell"><div class="progress-bar" style="width:${per}%; background:${per===100?'var(--status-green)':'var(--erp-accent)'}"></div></div>
+                ${dList.length > 0 ? `<div style="margin-top:10px; color:var(--status-red); font-size:11px; font-weight:800;">⚠️ 납기 지연 ${dList.length}건 발생</div>` : ''}
             </div>`;
         }).join('');
     }
 
     function sendGmailTable(vendor, list) {
         event.stopPropagation();
+        if(list.length === 0) { alert("지연 품목이 없습니다."); return; }
         let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n";
         list.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
-        const subject = encodeURIComponent(`[SKE 지연] ${vendor} 납품 독촉`);
-        const body = encodeURIComponent(`7일 이상 지연 리스트:\n\n${t}--------------------------------------------------`);
+        const subject = encodeURIComponent(`[SKE ERP] ${vendor} 귀중 - 자재 납품 지연 독촉`);
+        const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n\n7일 이상 납품이 지연된 품목에 대해 빠른 입고 확인을 요청드립니다.\n\n${t}--------------------------------------------------\n감사합니다.`);
         window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
     }
 
     function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
 
     function renderMaterials() {
-        const search = document.getElementById('ma-search').value.toUpperCase();
+        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
             if(search && !(`${m.vendor}${m.project}${m.item}`.toUpperCase().includes(search))) return '';
             const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
-            const diff = (new Date() - new Date(m.regDate || m.date)) / (1000*60*60*24);
-            const realIdx = db.material.indexOf(m);
+            const diff = (today - new Date(m.regDate || m.date)) / (1000*60*60*24);
+            const isDelay = !isOk && diff >= 7; const realIdx = db.material.indexOf(m);
 
             return `<tr>
-                <td class="editable" onclick="editData('material', ${realIdx}, 'regDate')">${m.regDate || m.date}</td>
-                <td class="editable" onclick="editData('material', ${realIdx}, 'project')">${m.project}</td>
-                <td class="editable" onclick="editData('material', ${realIdx}, 'order')">${m.order || '-'}</td>
+                <td class="item-link" onclick="editData('material', ${realIdx}, 'regDate')">${m.regDate || m.date}</td>
+                <td class="item-link" onclick="editData('material', ${realIdx}, 'project')">${m.project}</td>
+                <td class="item-link" onclick="editData('material', ${realIdx}, 'order')">${m.order || '-'}</td>
                 <td class="item-link" onclick="applyMaFilter('${m.vendor}')">${m.vendor}</td>
-                <td style="text-align:left;">${(!isOk && diff >= 7)?'<span class="badge badge-delay">⚠️ 지연</span>':''}${m.item}</td>
-                <td class="editable" onclick="editData('material', ${realIdx}, 'targetQty')">${req}</td>
-                <td class="editable" onclick="editData('material', ${realIdx}, 'inQty')">${recv}</td>
-                <td><span class="badge ${isOk?'badge-ok':'badge-pending'}">${isOk?'완료':'미입고'}</span></td>
-                <td><button onclick="copyRow('material', null, null, null, ${realIdx})">복사</button> <button class="btn-del" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+                <td style="text-align:left;">${isDelay?'<span class="badge badge-delay">지연</span>':''}${m.item}</td>
+                <td class="item-link" onclick="editData('material', ${realIdx}, 'targetQty')">${req}</td>
+                <td class="item-link" onclick="editData('material', ${realIdx}, 'inQty')">${recv}</td>
+                <td><span class="badge ${isOk?'badge-success':'badge-warn'}">${isOk?'완료':'미입고'}</span></td>
+                <td><button class="btn-text" onclick="copyRow('material', null, null, null, ${realIdx})">복사</button> <button class="btn-text" style="color:red" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 🛠️ 공통 기능 ---
+    // --- 🛠️ ERP 공통 모듈 ---
     function openHistory(name, spec) {
         const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
-        document.getElementById('modalTitle').innerText = `📦 [${name}] 상세 이력`;
-        document.getElementById('history-table-body').innerHTML = hList.map(h => `<tr><td>${h.date}</td><td style="color:${h.type==='출고'?'var(--red)':'var(--blue)'}">${h.type}</td><td>${h.qty}</td><td><button onclick="deleteData('stock', ${h.timestamp}); closeModal();">삭제</button></td></tr>`).join('');
+        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) - 상세 거래 이력`;
+        document.getElementById('history-table-body').innerHTML = hList.map(h => `<tr><td>${h.date}</td><td style="color:${h.type==='출고'?'red':'blue'}"><b>${h.type}</b></td><td>${h.qty.toLocaleString()}</td><td><button class="btn-text" onclick="deleteData('stock', ${h.timestamp}); closeModal();">삭제</button></td></tr>`).join('');
         document.getElementById('historyModal').style.display = 'block';
     }
-
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
 
     async function editData(type, idx, field) {
         const target = type === 'stock' ? db.stock[idx] : db.material[idx];
-        const val = prompt("수정:", target[field]);
+        const val = prompt("데이터 수정을 진행합니다.\n현재값: " + target[field], target[field]);
         if(val !== null) { target[field] = (field.includes('Qty') || field === 'inQty') ? Number(val) : val; await saveData(type); }
     }
 
     function copyRow(type, name, spec, parent, idx) {
         if(type === 'stock') {
-            document.getElementById('st-parent').value = parent; document.getElementById('st-item').value = name;
-            document.getElementById('st-spec').value = spec; document.getElementById('st-type').value = '출고';
+            document.getElementById('st-parent').value = parent; document.getElementById('st-item').value = name; document.getElementById('st-spec').value = spec; document.getElementById('st-type').value = '출고';
         } else {
             const d = db.material[idx];
-            document.getElementById('ma-project').value = d.project; document.getElementById('ma-order').value = d.order || '';
-            document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item;
-            document.getElementById('ma-req').value = d.targetQty || 0;
+            document.getElementById('ma-project').value = d.project; document.getElementById('ma-order').value = d.order || ''; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty || 0;
         }
         window.scrollTo({top:0, behavior:'smooth'});
     }
 
     async function addData(type) {
-        if(type === 'stock') db.stock.push({ date: document.getElementById('st-date').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: Date.now() });
-        else db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, order: document.getElementById('ma-order').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: Number(document.getElementById('ma-recv').value), timestamp: Date.now() });
+        const ts = Date.now();
+        if(type === 'stock') db.stock.push({ date: document.getElementById('st-date').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
+        else db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, order: document.getElementById('ma-order').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: Number(document.getElementById('ma-recv').value), timestamp: ts });
         await saveData(type);
     }
 
-    async function deleteData(type, ts) { if(!confirm("삭제?")) return; if(type === 'stock') db.stock = db.stock.filter(d => d.timestamp !== ts); else db.material = db.material.filter(d => d.timestamp !== ts); await saveData(type); }
+    async function deleteData(type, ts) { if(!confirm("해당 데이터를 영구 삭제하시겠습니까?")) return; if(type === 'stock') db.stock = db.stock.filter(d => d.timestamp !== ts); else db.material = db.material.filter(d => d.timestamp !== ts); await saveData(type); }
     async function saveData(type) { await fetch(type === 'stock' ? STOCK_URL : MATERIAL_URL, { method: 'PUT', body: JSON.stringify(type === 'stock' ? db.stock : db.material) }); type === 'stock' ? loadStock() : loadMaterials(); }
     function resetUI(type) { if(type === 'stock') { filters.stock = { parent: '', level: '' }; document.getElementById('st-search').value = ''; loadStock(); } else { document.getElementById('ma-search').value = ''; loadMaterials(); } }
 
     const today = new Date().toISOString().split('T')[0];
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
-    loadAll();
+    loadStock();
 </script>
 </body>
 </html>
