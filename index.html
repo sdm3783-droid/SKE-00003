@@ -103,7 +103,7 @@
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
     let stockData = [], materialData = [];
-    let currentStockFilter = { parent: '', level: '' }; // 필터링 상태 저장 변수
+    let currentStockFilter = { parent: '', level: '' };
 
     function showPage(page) {
         document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
@@ -113,7 +113,6 @@
         page === 'stock' ? loadStock() : loadMaterials();
     }
 
-    // --- 📦 통합재고 로직 ---
     async function loadStock() {
         const res = await fetch(STOCK_URL);
         const data = await res.json();
@@ -127,6 +126,7 @@
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if (qty < limit[0]) return { txt: '경고', ico: '🔴' };
         if (qty < limit[1]) return { txt: '주의', ico: '🟠' };
+        if (qty < limit[2]) return { txt: '부족', ico: '🟡' }; // 📍 부족 단계 추가
         return { txt: '양호', ico: '🟢' };
     }
 
@@ -141,7 +141,7 @@
         const parentMap = {};
         Object.values(summary).forEach(s => {
             const p = s.parent.toUpperCase();
-            if(!parentMap[p]) parentMap[p] = { '경고': 0, '주의': 0, '양호': 0 };
+            if(!parentMap[p]) parentMap[p] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 }; // 📍 부족 추가
             parentMap[p][getLevel(s.current, p).txt]++;
         });
 
@@ -151,12 +151,12 @@
                 <div class="status-grid">
                     <div class="st-btn" style="background:#fee2e2; color:#b91c1c" onclick="setStockFilter('${p}', '경고')">🔴 ${parentMap[p]['경고']}</div>
                     <div class="st-btn" style="background:#fff7ed; color:#9a3412" onclick="setStockFilter('${p}', '주의')">🟠 ${parentMap[p]['주의']}</div>
+                    <div class="st-btn" style="background:#fefce8; color:#ca8a04" onclick="setStockFilter('${p}', '부족')">🟡 ${parentMap[p]['부족']}</div>
                     <div class="st-btn" style="background:#f0fdf4; color:#15803d" onclick="setStockFilter('${p}', '양호')">🟢 ${parentMap[p]['양호']}</div>
                 </div>
             </div>`).join('');
     }
 
-    // 📍 꼬이지 않는 필터링 함수
     function setStockFilter(p, l) {
         currentStockFilter = { parent: p, level: l };
         document.getElementById('searchStock').value = p + " - " + l;
@@ -178,7 +178,6 @@
             const res = getLevel(cur, d.parent);
             const parent = (d.parent || "CABLE").toUpperCase();
 
-            // 필터링 체크 (대시보드 클릭 우선, 검색창 보조)
             if (currentStockFilter.parent && (parent !== currentStockFilter.parent || res.txt !== currentStockFilter.level)) return '';
             if (!currentStockFilter.parent && searchInput && !((d.item + parent + (d.spec||"")).toUpperCase().includes(searchInput))) return '';
 
@@ -196,7 +195,6 @@
         }).join('');
     }
 
-    // --- ⚙️ 사급자재 로직 ---
     async function loadMaterials() {
         const res = await fetch(MATERIAL_URL);
         const data = await res.json();
@@ -243,7 +241,6 @@
         }).join('');
     }
 
-    // --- 공통 기능 ---
     function resetFilter(type) {
         if(type === 'stock') { currentStockFilter = { parent: '', level: '' }; document.getElementById('searchStock').value = ''; renderStock(); }
         else { document.getElementById('searchMa').value = ''; renderMaterials(); }
