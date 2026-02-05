@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE ERP SYSTEM</title>
+    <title>SKE 재고관리 SYSTEM</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
@@ -50,7 +50,6 @@
         th { background: #f8fafc; padding: 15px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 12px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
         
-        /* 버튼 공통 */
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; margin: 0 2px; }
         .del-btn:hover { background: #fee2e2; }
@@ -159,20 +158,20 @@
             stats[s.p][getLv(s.q, s.p).t]++;
         });
         document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
-            <div class="dash-card">
+            <div class="dash-card" onclick="setStFilter('${p}', '')">
                 <span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span>
                 <div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div>
                 <div class="st-grid">
-                    <button class="st-btn" style="background:var(--status-red)" onclick="setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
-                    <button class="st-btn" style="background:var(--status-brown)" onclick="setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
-                    <button class="st-btn" style="background:var(--status-yellow)" onclick="setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
-                    <button class="st-btn" style="background:var(--status-green)" onclick="setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
+                    <button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
+                    <button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
+                    <button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
+                    <button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
                 </div>
             </div>`).join('');
     }
 
     function setStFilter(p, l) { 
-        document.getElementById('st-search').value = ''; // 대시보드 클릭 시 검색어 초기화
+        document.getElementById('st-search').value = ''; 
         stFilter = { p, l }; 
         renderStock(); 
     }
@@ -188,8 +187,11 @@
         document.getElementById('stock-table-body').innerHTML = Object.values(sum).map(s => {
             const lv = getLv(s.q, s.p);
             
-            // 필터링 로직: 대시보드 필터 우선, 검색어 있을 시 검색 우선
-            if(stFilter.p && (s.p !== stFilter.p || lv.t !== stFilter.l)) return '';
+            // 📍 분류(p)만 있고 상태(l)가 없으면 해당 분류 전체 출력
+            if(stFilter.p && s.p !== stFilter.p) return '';
+            // 📍 상태(l)까지 있으면 상태까지 체크
+            if(stFilter.l && lv.t !== stFilter.l) return '';
+            
             if(search && !(`${s.name}${s.spec}`.toUpperCase().includes(search))) return '';
             
             const itemEntries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
@@ -209,7 +211,6 @@
         }).join('');
     }
 
-    // --- ⚙️ 사급자재 로직 ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
