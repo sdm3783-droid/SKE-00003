@@ -9,6 +9,7 @@
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
             --status-red: #ef4444; --status-brown: #9a3412; --status-yellow: #eab308; --status-green: #10b981;
+            --status-blue: #3b82f6; /* 부분입고용 파란색 추가 */
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
         
@@ -39,8 +40,9 @@
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; } 
-        .status-ok { background: #dcfce7; color: #166534; } 
+        .status-mi { background: #fee2e2; color: #991b1b; }      /* 미입고: 빨강 */
+        .status-part { background: #e0f2fe; color: #0369a1; }    /* 부분입고: 파랑 추가 */
+        .status-ok { background: #dcfce7; color: #166534; }      /* 입고완료: 초록 */
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
 
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
@@ -51,9 +53,7 @@
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
 
-        /* 합계 행 스타일 */
         .total-row { background-color: #f1f5f9; font-weight: 900; border-top: 2px solid #cbd5e1; }
-
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 80%; max-width: 800px; }
     </style>
@@ -175,14 +175,12 @@
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
         const sum = {};
-        let totalQty = 0; // 📍 합계용 변수 추가
-
+        let totalQty = 0;
         db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
             if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' };
             sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
         });
-
         const rows = Object.values(sum).filter(s => {
             const lv = getLv(s.q, s.p);
             if(stFilter.p && s.p !== stFilter.p) return false;
@@ -190,10 +188,7 @@
             if(search && !(`${s.code}${s.name}${s.spec}`.toUpperCase().includes(search))) return false;
             return true;
         });
-
-        // 📍 필터링된 항목들의 수량 합계 계산
         rows.forEach(r => totalQty += r.q);
-
         let html = rows.map(s => {
             const lv = getLv(s.q, s.p);
             const entries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
@@ -211,8 +206,6 @@
                 </td>
             </tr>`;
         }).join('');
-
-        // 📍 리스트 맨 아래 합계 행 추가
         if(rows.length > 0) {
             html += `<tr class="total-row">
                 <td colspan="4" style="text-align:right; padding-right:20px;">검색 품목 수량 합계</td>
@@ -220,11 +213,10 @@
                 <td colspan="2"></td>
             </tr>`;
         }
-
         document.getElementById('stock-table-body').innerHTML = html;
     }
 
-    // --- ⚙️ 사급자재 로직 ---
+    // --- ⚙️ 사급자재 로직 (부분입고 업데이트) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -256,10 +248,21 @@
         const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
             if(search && !(`${m.vendor}${m.project}${m.item}`.toUpperCase().includes(search))) return '';
-            const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
+            const req = m.targetQty || 0, recv = m.inQty || 0;
             const regDate = new Date(m.regDate || m.date);
-            const isDelay = !isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7;
+            const isDelay = (recv < req) && (today - regDate) / (1000 * 60 * 60 * 24) >= 7;
             const rIdx = db.material.indexOf(m);
+            
+            // 📍 상태 판별 로직 추가
+            let statusBadge = '';
+            if (recv === 0) {
+                statusBadge = '<span class="badge status-mi">미입고</span>';
+            } else if (recv < req) {
+                statusBadge = '<span class="badge status-part">부분입고</span>';
+            } else {
+                statusBadge = '<span class="badge status-ok">입고완료</span>';
+            }
+
             return `<tr>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
@@ -267,13 +270,13 @@
                 <td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'inQty')" style="color:var(--erp-accent)">${recv}</span></td>
-                <td><span class="badge ${isOk?'status-ok':'status-mi'}">${isOk?'입고완료':'미입고'}</span></td>
+                <td>${statusBadge}</td>
                 <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 🛠️ 공통 편의 기능 ---
+    // --- 🛠️ 공통 기능 ---
     function openHistory(name, spec) {
         const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
         document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 입출고이력`;
