@@ -39,18 +39,19 @@
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; } /* 미입고 */
-        .status-ok { background: #dcfce7; color: #166534; } /* 입고완료 */
+        .status-mi { background: #fee2e2; color: #991b1b; } 
+        .status-ok { background: #dcfce7; color: #166534; } 
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
 
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 15px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 12px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
         
-        /* Gmail 및 삭제 버튼 */
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
-        .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; }
+        .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; margin: 0 2px; }
         .del-btn:hover { background: #fee2e2; }
+        .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; margin: 0 2px; }
+        .copy-btn:hover { background: #e0f2fe; }
 
         /* 모달 */
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
@@ -75,7 +76,7 @@
                 <input type="date" id="st-date"><select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option></select>
-                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
+                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">수불등록</button>
             </div>
         </div>
         <table>
@@ -91,7 +92,7 @@
                 <input type="date" id="ma-date"><input type="text" id="ma-project" placeholder="프로젝트">
                 <input type="text" id="ma-vendor" placeholder="협력업체"><input type="text" id="ma-item" placeholder="자재명">
                 <input type="number" id="ma-req" placeholder="필요량"><input type="number" id="ma-recv" placeholder="입고량">
-                <button class="btn-erp" onclick="addData('material')">등록</button>
+                <button class="btn-erp" onclick="addData('material')">발주등록</button>
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
@@ -128,7 +129,6 @@
         renderMaDash(); renderMaterials();
     }
 
-    // --- 📊 통합재고 로직 ---
     function getLv(q, p) {
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if(q < limit[0]) return { t: '경고', c: '#ef4444' };
@@ -174,18 +174,25 @@
         document.getElementById('stock-table-body').innerHTML = Object.values(sum).map(s => {
             const lv = getLv(s.q, s.p);
             if(stFilter.p && (s.p !== stFilter.p || lv.t !== stFilter.l)) return '';
+            
+            // 📍 삭제를 위한 해당 품목의 최신 타임스탬프 찾기
+            const itemEntries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
+            const latestTs = itemEntries.length > 0 ? Math.max(...itemEntries.map(e => e.timestamp)) : 0;
+
             return `<tr>
                 <td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
                 <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td>
                 <td><span class="editable" onclick="editData('stock_master','${s.name}|${s.spec}','spec')">${s.spec||'-'}</span></td>
                 <td style="color:var(--erp-accent); font-weight:900;">${s.q.toLocaleString()}</td>
                 <td style="color:${lv.c}; font-weight:800;">● ${lv.t}</td>
-                <td><button class="del-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}')">복사</button></td>
+                <td>
+                    <button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}')">복사</button>
+                    <button class="del-btn" onclick="deleteData('stock', ${latestTs})">삭제</button>
+                </td>
             </tr>`;
         }).join('');
     }
 
-    // --- ⚙️ 사급자재 로직 (필터링 및 Gmail 복구) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -228,12 +235,11 @@
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'inQty')" style="color:var(--erp-accent)">${recv}</span></td>
                 <td><span class="badge ${isOk?'status-ok':'status-mi'}">${isOk?'입고완료':'미입고'}</span></td>
-                <td><button class="del-btn" onclick="copyRow('material',null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+                <td><button class="copy-btn" onclick="copyRow('material',null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 🛠️ 공통 편의 기능 ---
     function openHistory(name, spec) {
         const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
         document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 입출고이력`;
@@ -304,5 +310,3 @@
 </script>
 </body>
 </html>
-
-
