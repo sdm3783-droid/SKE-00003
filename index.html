@@ -45,10 +45,10 @@
         
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
-        .total-row { background-color: #f1f5f9; font-weight: 900; border-top: 2px solid #cbd5e1; }
 
+        .total-row { background-color: #f1f5f9; font-weight: 900; border-top: 2px solid #cbd5e1; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
-        .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 90%; max-width: 1000px; max-height: 85vh; overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); }
+        .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 90%; max-width: 950px; max-height: 85vh; overflow-y: auto; }
     </style>
 </head>
 <body>
@@ -74,7 +74,7 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 재고 검색 (코드, 품목명)...">
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 재고 검색...">
             <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
         </div>
         <table>
@@ -97,7 +97,7 @@
             <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
         </div>
         <table>
-            <thead><tr><th>발주일</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>발주량</th><th>입고합계</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>발주일</th><th>프로젝트</th><th>업체</th><th>품명 (입고이력/메모)</th><th>발주량</th><th>입고합계</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
@@ -106,7 +106,7 @@
 <div id="erpModal" class="erp-modal">
     <div class="modal-body">
         <span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px; color:var(--erp-primary); border-bottom:2px solid #eee; padding-bottom:10px;"></div>
+        <div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px; color:var(--erp-primary);"></div>
         <div id="modalContent"></div>
     </div>
 </div>
@@ -126,7 +126,7 @@
         renderMaDash(); renderMaterials();
     }
 
-    // --- 통합재고 전용 로직 ---
+    // --- 통합재고 로직 ---
     function getLv(q, p) {
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
@@ -188,7 +188,7 @@
         }).join('') + (rows.length > 0 ? `<tr class="total-row"><td colspan="4" style="text-align:right;">검색 품목 수량 합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>` : '');
     }
 
-    // --- 사급자재 전용 로직 (이력관리 + 메모) ---
+    // --- 사급자재 로직 ---
     function renderMaDash() {
         const vMap = {}; db.material.forEach(m => {
             if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0 };
@@ -228,7 +228,7 @@
         }).join('');
     }
 
-    // --- 팝업 모달 상세 제어 ---
+    // --- 팝업 이력관리 + 메모 로직 ---
     function openStockHistory(n, s) {
         const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp);
         document.getElementById('modalTitle').innerText = `📦 ${n} (${s}) 입출고 이력`;
@@ -240,20 +240,22 @@
         const m = db.material.find(x => x.timestamp === ts);
         const history = m.history || [];
         const totalRecv = history.reduce((a, b) => a + Number(b.qty), 0);
-        document.getElementById('modalTitle').innerText = `⚙️ ${m.item} 입고 이력 및 메모 관리`;
+        
+        document.getElementById('modalTitle').innerText = `⚙️ ${m.item} 부분 입고 및 메모 관리`;
         document.getElementById('modalContent').innerHTML = `
-            <div style="background:#f8fafc; padding:20px; border-radius:12px; margin-bottom:20px; border:1px solid #e2e8f0;">
-                <div style="margin-bottom:15px; font-weight:800; font-size:15px;">📥 새로운 입고 기록 추가</div>
-                <div style="display:grid; grid-template-columns: 150px 120px 1fr 100px; gap:10px;">
-                    <input type="date" id="new-ma-date" value="${new Date().toISOString().split('T')[0]}">
-                    <input type="number" id="new-ma-qty" placeholder="수량">
-                    <input type="text" id="new-ma-memo" placeholder="메모 (예: 택배도착, 담당자확인 등)">
-                    <button class="btn-erp" onclick="addMaHistory(${ts})">추가</button>
+            <div style="background:#f8fafc; padding:15px; border-radius:10px; margin-bottom:20px; border:1px solid #e2e8f0;">
+                <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                    <input type="date" id="new-ma-date" style="width:140px;" value="${new Date().toISOString().split('T')[0]}">
+                    <input type="number" id="new-ma-qty" placeholder="입고수량" style="width:90px;">
+                    <input type="text" id="new-ma-memo" placeholder="비고(메모) 입력" style="flex:1; min-width:200px;">
+                    <button class="btn-erp" onclick="addMaHistory(${ts})">이력추가</button>
                 </div>
-                <div style="margin-top:10px; font-size:12px; color:#64748b;">* 발주량: <b>${m.targetQty}</b> / 현재 합계: <b style="color:var(--erp-accent)">${totalRecv}</b></div>
+                <div style="margin-top:10px; font-size:12px; color:#64748b;">
+                    발주량: <b>${m.targetQty}</b> / 현재 합계: <b style="color:var(--erp-accent)">${totalRecv}</b>
+                </div>
             </div>
-            <table><thead><tr><th>입고일자</th><th>입고량</th><th>메모</th><th>관리</th></tr></thead>
-            <tbody>${history.length ? history.map((h, i) => `<tr><td>${h.date}</td><td><b>${h.qty}</b></td><td style="text-align:left;">${h.memo || '-'}</td><td><button class="del-btn" onclick="deleteMaHistory(${ts}, ${i})">삭제</button></td></tr>`).join('') : '<tr><td colspan="4" style="padding:40px; color:#94a3b8;">입고 이력이 없습니다.</td></tr>'}</tbody></table>`;
+            <table><thead><tr><th>입고일자</th><th>입고량</th><th>비고(메모)</th><th>관리</th></tr></thead>
+            <tbody>${history.length ? history.map((h, i) => `<tr><td>${h.date}</td><td><b>${h.qty}</b></td><td style="text-align:left;">${h.memo || '-'}</td><td><button class="del-btn" onclick="deleteMaHistory(${ts}, ${i})">삭제</button></td></tr>`).join('') : '<tr><td colspan="4">입고 이력 및 메모가 없습니다.</td></tr>'}</tbody></table>`;
         document.getElementById('erpModal').style.display = 'block';
     }
 
@@ -261,10 +263,10 @@
         const qty = document.getElementById('new-ma-qty').value;
         const date = document.getElementById('new-ma-date').value;
         const memo = document.getElementById('new-ma-memo').value;
-        if(!qty || qty <= 0) return alert("입고 수량을 정확히 입력하세요.");
+        if(!qty || qty <= 0) return alert("수량을 입력하세요.");
         const m = db.material.find(x => x.timestamp === ts);
         if(!m.history) m.history = [];
-        m.history.push({ date, qty: Number(qty), memo: memo, ts: Date.now() });
+        m.history.push({ date, qty: Number(qty), memo: memo || '', ts: Date.now() });
         await saveData('material');
         openMaHistory(ts);
     }
@@ -277,19 +279,18 @@
         openMaHistory(mTs);
     }
 
-    // --- 공통 핵심 기능 ---
+    // --- 공통 기능 ---
     async function addData(type) {
         const ts = Date.now();
         if(type === 'stock') {
-            const code = document.getElementById('st-code').value;
-            db.stock.push({ date: document.getElementById('st-date').value, code: code || '-', parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
+            db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value || '-', parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
         } else {
             db.material.push({ date: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), history: [], timestamp: ts });
         }
         await saveData(type);
     }
 
-    async function deleteData(type, ts) { if(confirm("전체 데이터를 삭제하시겠습니까?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
+    async function deleteData(type, ts) { if(confirm("데이터를 삭제하시겠습니까?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
     function closeModal() { document.getElementById('erpModal').style.display = 'none'; }
     function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
