@@ -113,6 +113,7 @@
         page === 'stock' ? loadStock() : loadMaterials();
     }
 
+    // --- 📦 통합재고 관리 ---
     async function loadStock() {
         const res = await fetch(STOCK_URL);
         const data = await res.json();
@@ -126,7 +127,7 @@
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if (qty < limit[0]) return { txt: '경고', ico: '🔴' };
         if (qty < limit[1]) return { txt: '주의', ico: '🟠' };
-        if (qty < limit[2]) return { txt: '부족', ico: '🟡' }; // 📍 부족 단계 추가
+        if (qty < limit[2]) return { txt: '부족', ico: '🟡' };
         return { txt: '양호', ico: '🟢' };
     }
 
@@ -141,7 +142,7 @@
         const parentMap = {};
         Object.values(summary).forEach(s => {
             const p = s.parent.toUpperCase();
-            if(!parentMap[p]) parentMap[p] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 }; // 📍 부족 추가
+            if(!parentMap[p]) parentMap[p] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 };
             parentMap[p][getLevel(s.current, p).txt]++;
         });
 
@@ -174,6 +175,7 @@
         });
 
         body.innerHTML = stockData.sort((a,b)=>b.timestamp-a.timestamp).map((d, idx) => {
+            const originalIdx = stockData.indexOf(d);
             const cur = summary[(d.item || "").trim() + "|" + (d.spec || "").trim()] || 0;
             const res = getLevel(cur, d.parent);
             const parent = (d.parent || "CABLE").toUpperCase();
@@ -182,19 +184,20 @@
             if (!currentStockFilter.parent && searchInput && !((d.item + parent + (d.spec||"")).toUpperCase().includes(searchInput))) return '';
 
             return `<tr>
-                <td data-label="일자" class="editable" onclick="edit('stock', ${idx}, 'date')">${d.date}</td>
+                <td data-label="일자" class="editable" onclick="edit('stock', ${originalIdx}, 'date')">${d.date}</td>
                 <td data-label="상위">${parent}</td>
-                <td data-label="품목" class="editable" onclick="edit('stock', ${idx}, 'item')">${d.item}</td>
+                <td data-label="품목" class="editable" onclick="edit('stock', ${originalIdx}, 'item')">${d.item}</td>
                 <td data-label="규격">${d.spec || '-'}</td>
                 <td data-label="구분">${d.type}</td>
                 <td data-label="수량">${d.qty}</td>
                 <td data-label="현재고" style="color:var(--blue)">${cur}</td>
                 <td data-label="상태">${res.ico} ${res.txt}</td>
-                <td><button onclick="copy('stock', ${idx})">복사</button> <button class="btn-del" onclick="del('stock', ${d.timestamp})">삭제</button></td>
+                <td><button onclick="copy('stock', ${originalIdx})">복사</button> <button class="btn-del" onclick="del('stock', ${d.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
+    // --- ⚙️ 사급자재 로직 ---
     async function loadMaterials() {
         const res = await fetch(MATERIAL_URL);
         const data = await res.json();
@@ -224,23 +227,26 @@
     function renderMaterials() {
         const filter = document.getElementById('searchMa').value.toUpperCase();
         document.getElementById('ma-body').innerHTML = materialData.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
+            const originalIdx = materialData.indexOf(m);
             const req = m.targetQty || m.req || 0;
             const recv = m.inQty || m.recv || 0;
             if(filter && !(m.vendor + m.project + m.item).toUpperCase().includes(filter)) return '';
+            
             return `<tr>
-                <td data-label="일자" class="editable" onclick="edit('ma', ${idx}, 'regDate')">${m.regDate || m.date}</td>
-                <td data-label="프로젝트" class="editable" onclick="edit('ma', ${idx}, 'project')">${m.project}</td>
-                <td data-label="발주번호">${m.order || '-'}</td>
-                <td data-label="업체명">${m.vendor}</td>
-                <td data-label="자재명">${m.item}</td>
-                <td data-label="필요">${req}</td>
-                <td data-label="입고" class="editable" onclick="edit('ma', ${idx}, 'inQty')">${recv}</td>
+                <td data-label="일자" class="editable" onclick="edit('ma', ${originalIdx}, 'regDate')">${m.regDate || m.date}</td>
+                <td data-label="프로젝트" class="editable" onclick="edit('ma', ${originalIdx}, 'project')">${m.project}</td>
+                <td data-label="발주번호" class="editable" onclick="edit('ma', ${originalIdx}, 'order')">${m.order || '-'}</td>
+                <td data-label="업체명" class="editable" onclick="edit('ma', ${originalIdx}, 'vendor')">${m.vendor}</td>
+                <td data-label="자재명" class="editable" onclick="edit('ma', ${originalIdx}, 'item')">${m.item}</td>
+                <td data-label="필요" class="editable" onclick="edit('ma', ${originalIdx}, 'targetQty')">${req}</td>
+                <td data-label="입고" class="editable" onclick="edit('ma', ${originalIdx}, 'inQty')">${recv}</td>
                 <td data-label="상태">${recv >= req ? '✅완료' : '❌미입고'}</td>
-                <td><button onclick="copy('ma', ${idx})">복사</button> <button class="btn-del" onclick="del('ma', ${m.timestamp})">삭제</button></td>
+                <td><button onclick="copy('ma', ${originalIdx})">복사</button> <button class="btn-del" onclick="del('ma', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
+    // --- 공통 기능 ---
     function resetFilter(type) {
         if(type === 'stock') { currentStockFilter = { parent: '', level: '' }; document.getElementById('searchStock').value = ''; renderStock(); }
         else { document.getElementById('searchMa').value = ''; renderMaterials(); }
@@ -248,9 +254,13 @@
 
     async function edit(type, idx, field) {
         const data = type === 'stock' ? stockData[idx] : materialData[idx];
-        const val = prompt("수정:", data[field]);
+        const val = prompt("수정할 값을 입력하세요:", data[field]);
         if(val !== null) {
-            data[field] = (field === 'qty' || field === 'inQty') ? Number(val) : val;
+            if (field === 'qty' || field === 'inQty' || field === 'targetQty' || field === 'req') {
+                data[field] = Number(val);
+            } else {
+                data[field] = val;
+            }
             await save(type);
         }
     }
