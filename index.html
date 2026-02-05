@@ -75,7 +75,7 @@
                 <input type="date" id="st-date"><select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option></select>
-                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">이력관리</button>
+                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
             </div>
         </div>
         <table>
@@ -236,7 +236,7 @@
     // --- 🛠️ 공통 편의 기능 ---
     function openHistory(name, spec) {
         const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
-        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 수불 히스토리`;
+        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 입출고이력`;
         document.getElementById('history-content').innerHTML = `
             <table style="width:100%">
                 <thead><tr><th>일자</th><th>구분</th><th>수량</th><th>작업</th></tr></thead>
@@ -304,4 +304,5 @@
 </script>
 </body>
 </html>
+
 
