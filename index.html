@@ -97,6 +97,7 @@
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="ma-date">
+                <input type="text" id="ma-order-no" placeholder="발주번호">
                 <input type="text" id="ma-project" placeholder="프로젝트">
                 <input type="text" id="ma-vendor" placeholder="업체명">
                 <input type="text" id="ma-item" placeholder="자재명">
@@ -107,11 +108,11 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 업체명, 프로젝트, 수령인 검색...">
+            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 발주번호, 업체명, 프로젝트 검색...">
             <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
         </div>
         <table>
-            <thead><tr><th>발주일</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
@@ -238,8 +239,7 @@
         const search = document.getElementById('ma-search').value.toUpperCase();
         const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            // 📍 검색 조건에 수령인 포함
-            const searchBase = `${m.vendor}${m.project}${m.item}${m.receiver || ''}`.toUpperCase();
+            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}${m.receiver || ''}`.toUpperCase();
             if(search && !searchBase.includes(search)) return '';
             
             const req = m.targetQty || 0;
@@ -251,6 +251,7 @@
             
             return `<tr>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td>
                 <td style="text-align:left;"><span class="editable" onclick="openMaHistory(${rIdx})">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span></td>
@@ -343,12 +344,13 @@
             }
             db.material.push({ 
                 regDate: document.getElementById('ma-date').value, 
+                orderNo: document.getElementById('ma-order-no').value,
                 project: document.getElementById('ma-project').value, 
                 vendor: document.getElementById('ma-vendor').value, 
                 item: document.getElementById('ma-item').value, 
                 targetQty: Number(document.getElementById('ma-req').value), 
                 inQty: recvQty, 
-                receiver: document.getElementById('ma-receiver').value, // 📍 수령인 데이터 저장
+                receiver: document.getElementById('ma-receiver').value,
                 timestamp: ts,
                 history: history 
             });
@@ -377,11 +379,12 @@
             document.getElementById('st-type').value = '출고'; 
         } else { 
             const d = db.material[i]; 
+            document.getElementById('ma-order-no').value = d.orderNo || '';
             document.getElementById('ma-project').value = d.project; 
             document.getElementById('ma-vendor').value = d.vendor; 
             document.getElementById('ma-item').value = d.item; 
             document.getElementById('ma-req').value = d.targetQty;
-            document.getElementById('ma-receiver').value = d.receiver || ''; // 📍 복사 시 수령인도 복사
+            document.getElementById('ma-receiver').value = d.receiver || '';
         } 
         window.scrollTo({top:0, behavior:'smooth'}); 
     }
@@ -402,4 +405,3 @@
 </script>
 </body>
 </html>
-
