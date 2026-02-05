@@ -73,7 +73,7 @@
         </div>
         <div class="search-area">
             <input type="text" id="searchStock" class="search-input" oninput="clearDashFilter(); renderStock();" placeholder="🔍 품목명을 클릭하면 입출고 이력을 봅니다">
-            <button onclick="resetFilter('stock')" style="padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer; font-weight:bold;">초기화</button>
+            <button onclick="resetFilter('stock')" style="padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer; font-weight:bold;">전체</button>
         </div>
         <div class="table-wrapper"><table><thead><tr><th>상위</th><th>품목 (이력)</th><th>규격</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead><tbody id="stock-body"></tbody></table></div>
     </div>
@@ -323,3 +323,4 @@
 </script>
 </body>
 </html>
+
