@@ -8,10 +8,11 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
-            --status-red: #ef4444; --status-orange: #f59e0b; --status-yellow: #eab308; --status-green: #10b981;
+            --status-red: #ef4444; --status-green: #10b981; --status-orange: #f59e0b;
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
         
+        /* 네비게이션 */
         .header { background: var(--erp-primary); display: flex; align-items: center; padding: 0 40px; height: 64px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .logo { color: white; font-weight: 900; font-size: 20px; margin-right: 50px; }
         .nav-btn { background: none; border: none; color: #94a3b8; font-weight: 700; font-size: 15px; padding: 0 25px; cursor: pointer; height: 100%; transition: 0.3s; }
@@ -19,46 +20,41 @@
 
         .container { max-width: 1650px; margin: 30px auto; padding: 0 30px; box-sizing: border-box; }
         .page-content { display: none; }
-        .page-content.active { display: block; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .page-content.active { display: block; }
 
-        /* 🌈 대시보드 컬러 강화 */
+        /* 대시보드 스타일 */
         .dash-container { display: flex; gap: 20px; overflow-x: auto; margin-bottom: 25px; padding: 5px; }
-        .dash-card { 
-            min-width: 320px; background: #fff; border-radius: 16px; padding: 24px; 
-            box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; cursor: pointer; 
-            border-left: 6px solid var(--erp-accent); transition: 0.2s;
-        }
-        .dash-card:hover { transform: translateY(-5px); }
-        .card-title { font-size: 18px; font-weight: 800; margin-bottom: 15px; display: block; }
+        .dash-card { min-width: 320px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; cursor: pointer; border-left: 6px solid var(--erp-accent); transition: 0.2s; }
+        .dash-card:hover { transform: translateY(-3px); }
+        .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
         
-        .status-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-        .st-btn { border: none; padding: 12px; border-radius: 10px; font-weight: 900; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white; }
-        .st-btn.red { background: var(--status-red); }
-        .st-btn.orange { background: var(--status-orange); }
-        .st-btn.yellow { background: var(--status-yellow); color: #854d0e; }
-        .st-btn.green { background: var(--status-green); }
-
-        /* 입력 및 테이블 */
-        .input-section { background: #fff; padding: 25px; border-radius: 16px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
+        /* 입력 섹션 */
+        .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; }
-        input, select { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-weight: 700; width: 100%; background: #fcfcfc; }
-        .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 12px 25px; border-radius: 8px; font-weight: 800; cursor: pointer; }
-        
-        .search-area { margin-bottom: 15px; display: flex; gap: 10px; }
-        .search-input { flex: 1; padding: 14px; border: 2px solid var(--erp-accent); border-radius: 12px; font-weight: 900; }
+        input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-weight: 700; width: 100%; background: #fcfcfc; }
+        .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 800; cursor: pointer; }
 
-        .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 8px; border-radius: 6px; }
+        /* 테이블 및 배지 */
+        .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
-
         .badge { padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; }
-        .status-ok { background: #dcfce7; color: #166534; }
-        .delay-tag { background: #dc2626; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 6px; }
+        .status-mi { background: #fee2e2; color: #991b1b; } /* 미입고 */
+        .status-ok { background: #dcfce7; color: #166534; } /* 입고완료 */
+        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
 
-        table { width: 100%; border-collapse: collapse; min-width: 1100px; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
+        table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 15px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
-        td { padding: 15px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
+        td { padding: 12px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
+        
+        /* Gmail 및 삭제 버튼 */
+        .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
+        .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; }
+        .del-btn:hover { background: #fee2e2; }
+
+        /* 모달 */
+        .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+        .modal-body { background: white; margin: 10% auto; padding: 30px; border-radius: 16px; width: 80%; max-width: 800px; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1); }
     </style>
 </head>
 <body>
@@ -79,15 +75,11 @@
                 <input type="date" id="st-date"><select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option></select>
-                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
+                <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">수불등록</button>
             </div>
         </div>
-        <div class="search-area">
-            <input type="text" id="st-search" class="search-input" oninput="filters.stock={parent:'',level:''}; renderStock();" placeholder="🔍 품목명 검색 (대시보드 클릭 시 필터 고정)">
-            <button onclick="resetUI('stock')" style="padding:10px 20px; border-radius:12px; border:1px solid #ddd; cursor:pointer; font-weight:bold;">🔄 초기화</button>
-        </div>
         <table>
-            <thead><tr><th>분류</th><th>품목명 (이력조회)</th><th>규격</th><th>현재고</th><th>상태</th><th>작업</th></tr></thead>
+            <thead><tr><th>분류</th><th>품목명 (이력조회)</th><th>규격</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="stock-table-body"></tbody>
         </table>
     </div>
@@ -102,18 +94,22 @@
                 <button class="btn-erp" onclick="addData('material')">발주등록</button>
             </div>
         </div>
+        <div style="margin-bottom:10px; display:flex; gap:10px;">
+            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 업체명 검색...">
+            <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
+        </div>
         <table>
-            <thead><tr><th>발주일</th><th>프로젝트</th><th>협력업체</th><th>자재품명</th><th>필요</th><th>입고</th><th>입고상태</th><th>작업</th></tr></thead>
+            <thead><tr><th>발주일</th><th>프로젝트</th><th>협력업체</th><th>자재품명</th><th>필요</th><th>입고</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
 </div>
 
-<div id="historyModal" style="display:none;" class="erp-modal">
-    <div class="modal-body" style="background:white; margin:10% auto; padding:30px; border-radius:20px; width:80%;">
+<div id="historyModal" class="erp-modal">
+    <div class="modal-body">
         <span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div id="modalTitle" style="font-weight:900; font-size:20px; margin-bottom:20px;"></div>
-        <div id="history-body"></div>
+        <div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px; color:var(--erp-primary);"></div>
+        <div id="history-content"></div>
     </div>
 </div>
 
@@ -121,83 +117,75 @@
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
     let db = { stock: [], material: [] };
-    let filters = { stock: { parent: '', level: '' } };
-
-    // --- 📊 통합재고 필터링 로직 수정 ---
-    function getLevel(qty, parent) {
-        const p = (parent || "CABLE").toUpperCase();
-        const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
-        if (qty < limit[0]) return { txt: '경고', color: '#ef4444' };
-        if (qty < limit[1]) return { txt: '주의', color: '#f59e0b' };
-        if (qty < limit[2]) return { txt: '부족', color: '#eab308' };
-        return { txt: '양호', color: '#10b981' };
-    }
+    let stFilter = { p: '', l: '' };
 
     async function loadStock() {
         const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {});
         renderStockDash(); renderStock();
     }
-
-    function renderStockDash() {
-        const summary = calculateStockSummary();
-        const stats = {};
-        Object.values(summary).forEach(s => {
-            if(!stats[s.parent]) stats[s.parent] = { '경고': 0, '주의': 0, '부족': 0, '양호': 0 };
-            stats[s.parent][getLevel(s.current, s.parent).txt]++;
-        });
-        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
-            <div class="dash-card">
-                <span class="card-title">${p} 재고 현황</span>
-                <div class="status-grid">
-                    <button class="st-btn red" onclick="applyStockFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
-                    <button class="st-btn orange" onclick="applyStockFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
-                    <button class="st-btn yellow" onclick="applyStockFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
-                    <button class="st-btn green" onclick="applyStockFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
-                </div>
-            </div>`).join('');
-    }
-
-    function applyStockFilter(p, l) {
-        filters.stock = { parent: p, level: l };
-        document.getElementById('st-search').value = `필터: ${p} / ${l}`;
-        renderStock();
-    }
-
-    function calculateStockSummary() {
-        const summary = {};
-        db.stock.forEach(d => {
-            const k = `${d.item}|${d.spec}`;
-            if(!summary[k]) summary[k] = { name: d.item, spec: d.spec, current: 0, parent: d.parent || 'CABLE' };
-            summary[k].current += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
-        });
-        return summary;
-    }
-
-    function renderStock() {
-        const search = document.getElementById('st-search').value.toUpperCase();
-        const summary = calculateStockSummary();
-        document.getElementById('stock-table-body').innerHTML = Object.values(summary).map(s => {
-            const lv = getLevel(s.current, s.parent);
-            if(filters.stock.parent && (s.parent !== filters.stock.parent || lv.txt !== filters.stock.level)) return '';
-            if(!filters.stock.parent && search && !(`${s.name}${s.spec}`.toUpperCase().includes(search))) return '';
-            
-            return `<tr>
-                <td><span class="badge" style="background:#f1f5f9">${s.parent}</span></td>
-                <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td>
-                <td><span class="editable" onclick="editStockMaster('${s.name}','${s.spec}','spec')">${s.spec||'-'}</span></td>
-                <td style="color:var(--erp-accent); font-weight:900;">${s.current.toLocaleString()}</td>
-                <td style="color:${lv.color}; font-weight:800;">● ${lv.txt}</td>
-                <td><button onclick="copyRow('stock','${s.name}','${s.spec}','${s.parent}')">복사</button></td>
-            </tr>`;
-        }).join('');
-    }
-
-    // --- ⚙️ 사급자재 로직 ---
     async function loadMaterials() {
         const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {});
         renderMaDash(); renderMaterials();
     }
 
+    // --- 📊 통합재고 로직 ---
+    function getLv(q, p) {
+        const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
+        if(q < limit[0]) return { t: '경고', c: '#ef4444' };
+        if(q < limit[1]) return { t: '주의', c: '#f59e0b' };
+        if(q < limit[2]) return { t: '부족', c: '#eab308' };
+        return { t: '양호', c: '#10b981' };
+    }
+
+    function renderStockDash() {
+        const sum = {}; 
+        db.stock.forEach(d => {
+            const k = `${d.item}|${d.spec}`;
+            if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' };
+            sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
+        });
+        const stats = {};
+        Object.values(sum).forEach(s => {
+            if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 };
+            stats[s.p][getLv(s.q, s.p).t]++;
+        });
+        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
+            <div class="dash-card">
+                <span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span>
+                <div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div>
+                <div class="st-grid">
+                    <button class="st-btn" style="background:#ef4444" onclick="setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
+                    <button class="st-btn" style="background:#f59e0b" onclick="setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
+                    <button class="st-btn" style="background:#eab308" onclick="setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
+                    <button class="st-btn" style="background:#10b981" onclick="setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
+                </div>
+            </div>`).join('');
+    }
+
+    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
+
+    function renderStock() {
+        const sum = {};
+        db.stock.forEach(d => {
+            const k = `${d.item}|${d.spec}`;
+            if(!sum[k]) sum[k] = { name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' };
+            sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
+        });
+        document.getElementById('stock-table-body').innerHTML = Object.values(sum).map(s => {
+            const lv = getLv(s.q, s.p);
+            if(stFilter.p && (s.p !== stFilter.p || lv.t !== stFilter.l)) return '';
+            return `<tr>
+                <td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
+                <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td>
+                <td><span class="editable" onclick="editData('stock_master','${s.name}|${s.spec}','spec')">${s.spec||'-'}</span></td>
+                <td style="color:var(--erp-accent); font-weight:900;">${s.q.toLocaleString()}</td>
+                <td style="color:${lv.c}; font-weight:800;">● ${lv.t}</td>
+                <td><button class="del-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}')">복사</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // --- ⚙️ 사급자재 로직 (필터링 및 Gmail 복구) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -210,53 +198,67 @@
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok/vMap[v].total)*100) || 0;
             const dCount = vMap[v].delayed.length;
-            const color = per === 100 ? 'var(--status-green)' : (dCount > 0 ? 'var(--status-red)' : 'var(--erp-accent)');
-            return `
-            <div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
-                <span class="vendor-name" style="font-weight:900; font-size:18px;">${v}</span>
-                <div style="font-size:24px; font-weight:900; color:${color}; margin-top:10px;">${per}%</div>
-                <div style="width:100%; height:8px; background:#e2e8f0; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
-                ${dCount > 0 ? `<div style="margin-top:10px; color:red; font-size:12px; font-weight:800;">지연 ${dCount}건 발생</div>` : ''}
+            const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#3b82f6');
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
+                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
+                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
+                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
+                <div style="font-size:22px; font-weight:900; color:${color}">${per}%</div>
+                <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
+                ${dCount > 0 ? `<div style="margin-top:10px; color:#ef4444; font-size:11px; font-weight:800;">지연 ${dCount}건</div>` : ''}
             </div>`;
         }).join('');
     }
 
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
+
     function renderMaterials() {
-        const search = document.getElementById('ma-search') ? document.getElementById('ma-search').value.toUpperCase() : "";
+        const search = document.getElementById('ma-search').value.toUpperCase();
         const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
+            if(search && !(`${m.vendor}${m.project}`.toUpperCase().includes(search))) return '';
             const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
-            const diff = (today - new Date(m.regDate || m.date)) / (1000*60*60*24);
-            const isDelay = !isOk && diff >= 7;
-            const realIdx = db.material.indexOf(m);
+            const isDelay = !isOk && (today - new Date(m.regDate || m.date)) / (1000*60*60*24) >= 7;
+            const rIdx = db.material.indexOf(m);
             return `<tr>
-                <td><span class="editable" onclick="editData('material', ${realIdx}, 'regDate')">${m.regDate || m.date}</span></td>
-                <td><span class="editable" onclick="editData('material', ${realIdx}, 'project')">${m.project}</span></td>
-                <td><span class="editable" onclick="editData('material', ${realIdx}, 'vendor')">${m.vendor}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td>
                 <td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td>
-                <td><span class="editable" onclick="editData('material', ${realIdx}, 'targetQty')">${req}</span></td>
-                <td><span class="editable" style="color:var(--erp-accent)" onclick="editData('material', ${realIdx}, 'inQty')">${recv}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'inQty')" style="color:var(--erp-accent)">${recv}</span></td>
                 <td><span class="badge ${isOk?'status-ok':'status-mi'}">${isOk?'입고완료':'미입고'}</span></td>
-                <td><button onclick="copyRow('material',null,null,null,${realIdx})">복사</button></td>
+                <td><button class="del-btn" onclick="copyRow('material',null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 🛠️ 공통 기능 ---
-    function switchPage(page) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + page).classList.add('active');
-        document.getElementById('nav-' + page).classList.add('active');
-        page === 'stock' ? loadStock() : loadMaterials();
+    // --- 🛠️ 공통 편의 기능 ---
+    function openHistory(name, spec) {
+        const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
+        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 수불 히스토리`;
+        document.getElementById('history-content').innerHTML = `
+            <table style="width:100%">
+                <thead><tr><th>일자</th><th>구분</th><th>수량</th><th>작업</th></tr></thead>
+                <tbody>${hList.map(h => `<tr><td>${h.date}</td><td style="color:${h.type==='출고'?'red':'blue'}">${h.type}</td><td>${h.qty}</td><td><button class="del-btn" onclick="deleteData('stock', ${h.timestamp}); closeModal();">삭제</button></td></tr>`).join('')}</tbody>
+            </table>`;
+        document.getElementById('historyModal').style.display = 'block';
     }
+    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
 
     async function editData(type, idx, field) {
-        const target = type==='stock' ? db.stock[idx] : db.material[idx];
-        const val = prompt("수정할 값을 입력하세요:", target[field]);
+        const target = type === 'stock_master' ? null : db[type][idx];
+        const currentVal = target ? target[field] : "";
+        const val = prompt("수정할 값을 입력하세요:", currentVal);
         if(val !== null) {
-            target[field] = (field === 'targetQty' || field === 'inQty') ? Number(val) : val;
-            await saveData(type);
+            if(type === 'stock_master') {
+                const [n, s] = idx.split('|');
+                db.stock.filter(d => d.item === n && d.spec === s).forEach(d => d[field] = val);
+                await saveData('stock');
+            } else {
+                target[field] = (field === 'targetQty' || field === 'inQty') ? Number(val) : val;
+                await saveData(type);
+            }
         }
     }
 
@@ -270,27 +272,30 @@
         await saveData(type);
     }
 
-    async function saveData(type) {
-        await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(type==='stock'?db.stock:db.material) });
-        type==='stock'?loadStock():loadMaterials();
+    async function deleteData(type, ts) { if(!confirm("삭제하시겠습니까?")) return; db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); }
+    async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
+    
+    function sendGmailTable(vendor, list) {
+        event.stopPropagation();
+        let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n";
+        list.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
+        const sub = encodeURIComponent(`[SKE ERP] ${vendor} 납기 지연 독촉`);
+        const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`, '_blank');
     }
 
-    function resetUI(t) {
-        if(t==='stock') { filters.stock = { parent:'', level:'' }; document.getElementById('st-search').value=''; renderStock(); }
-        else { loadMaterials(); }
-    }
-
-    function openHistory(name, spec) {
-        const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
-        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 수불 히스토리`;
-        document.getElementById('history-body').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th></tr></thead><tbody>${hList.map(h => `<tr><td>${h.date}</td><td>${h.type}</td><td>${h.qty}</td></tr>`).join('')}</tbody></table>`;
-        document.getElementById('historyModal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-    function copyRow(type, name, spec, parent, idx) {
-        if(type === 'stock') { document.getElementById('st-parent').value = parent; document.getElementById('st-item').value = name; document.getElementById('st-spec').value = spec; document.getElementById('st-type').value = '출고'; }
+    function copyRow(type, name, spec, p, idx) {
+        if(type === 'stock') { document.getElementById('st-parent').value = p; document.getElementById('st-item').value = name; document.getElementById('st-spec').value = spec; document.getElementById('st-type').value = '출고'; }
         else { const d = db.material[idx]; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; }
         window.scrollTo({top:0, behavior:'smooth'});
+    }
+
+    function switchPage(page) {
+        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('page-' + page).classList.add('active');
+        document.getElementById('nav-' + page).classList.add('active');
+        page === 'stock' ? loadStock() : loadMaterials();
     }
 
     const today = new Date().toISOString().split('T')[0];
