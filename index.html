@@ -3,18 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE 재고관리 SYSTEM</title>
+    <title>SKE ERP SYSTEM</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
-      :root { 
-    --erp-primary: #1e293b; 
-    --erp-accent: #3b82f6; 
-    --erp-bg: #f8fafc;
-    --status-red: #ef4444;    /* 경고: 빨강 */
-    --status-brown: #9a3412;  /* 주의: 밤색 (Deep Orange/Brown) */
-    --status-yellow: #eab308; /* 부족: 노랑 (기존 오렌지 대신 추가) */
-    --status-green: #10b981;  /* 양호: 초록 */
-}
+        :root { 
+            --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
+            --status-red: #ef4444;    /* 경고: 빨강 */
+            --status-brown: #9a3412;  /* 주의: 밤색 */
+            --status-yellow: #eab308; /* 부족: 노랑 */
+            --status-green: #10b981;  /* 양호: 초록 */
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
         
@@ -35,7 +32,7 @@
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
         
-        /* 입력 섹션 */
+        /* 입력 및 유틸리티 섹션 */
         .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 15px; }
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 14px; font-weight: 700; width: 100%; background: #fcfcfc; }
@@ -53,6 +50,7 @@
         th { background: #f8fafc; padding: 15px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 12px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 14px; font-weight: 600; }
         
+        /* 버튼 공통 */
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; font-weight: 800; margin: 0 2px; }
         .del-btn:hover { background: #fee2e2; }
@@ -84,6 +82,10 @@
                 <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option></select>
                 <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
             </div>
+        </div>
+        <div style="margin-bottom:10px; display:flex; gap:10px;">
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 품목명 또는 규격으로 재고 검색...">
+            <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
         </div>
         <table>
             <thead><tr><th>분류</th><th>품목명 (이력조회)</th><th>규격</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead>
@@ -135,12 +137,13 @@
         renderMaDash(); renderMaterials();
     }
 
+    // --- 📊 통합재고 로직 ---
     function getLv(q, p) {
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
-        if(q < limit[0]) return { t: '경고', c: '#ef4444' };
-        if(q < limit[1]) return { t: '주의', c: '#f59e0b' };
-        if(q < limit[2]) return { t: '부족', c: '#eab308' };
-        return { t: '양호', c: '#10b981' };
+        if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
+        if(q < limit[1]) return { t: '주의', c: 'var(--status-brown)' };
+        if(q < limit[2]) return { t: '부족', c: 'var(--status-yellow)' };
+        return { t: '양호', c: 'var(--status-green)' };
     }
 
     function renderStockDash() {
@@ -160,17 +163,22 @@
                 <span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span>
                 <div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div>
                 <div class="st-grid">
-                    <button class="st-btn" style="background:#ef4444" onclick="setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
-                    <button class="st-btn" style="background:#f59e0b" onclick="setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
-                    <button class="st-btn" style="background:#eab308" onclick="setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
-                    <button class="st-btn" style="background:#10b981" onclick="setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
+                    <button class="st-btn" style="background:var(--status-red)" onclick="setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
+                    <button class="st-btn" style="background:var(--status-brown)" onclick="setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
+                    <button class="st-btn" style="background:var(--status-yellow)" onclick="setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
+                    <button class="st-btn" style="background:var(--status-green)" onclick="setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
                 </div>
             </div>`).join('');
     }
 
-    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
+    function setStFilter(p, l) { 
+        document.getElementById('st-search').value = ''; // 대시보드 클릭 시 검색어 초기화
+        stFilter = { p, l }; 
+        renderStock(); 
+    }
 
     function renderStock() {
+        const search = document.getElementById('st-search').value.toUpperCase();
         const sum = {};
         db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
@@ -179,9 +187,11 @@
         });
         document.getElementById('stock-table-body').innerHTML = Object.values(sum).map(s => {
             const lv = getLv(s.q, s.p);
-            if(stFilter.p && (s.p !== stFilter.p || lv.t !== stFilter.l)) return '';
             
-            // 📍 삭제를 위한 해당 품목의 최신 타임스탬프 찾기
+            // 필터링 로직: 대시보드 필터 우선, 검색어 있을 시 검색 우선
+            if(stFilter.p && (s.p !== stFilter.p || lv.t !== stFilter.l)) return '';
+            if(search && !(`${s.name}${s.spec}`.toUpperCase().includes(search))) return '';
+            
             const itemEntries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
             const latestTs = itemEntries.length > 0 ? Math.max(...itemEntries.map(e => e.timestamp)) : 0;
 
@@ -199,6 +209,7 @@
         }).join('');
     }
 
+    // --- ⚙️ 사급자재 로직 ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -316,6 +327,3 @@
 </script>
 </body>
 </html>
-
-
-
