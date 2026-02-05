@@ -8,6 +8,7 @@
         :root { --primary: #0f172a; --bg: #f1f5f9; --blue: #1e40af; --red: #dc2626; --orange: #ea580c; --yellow: #ca8a04; --green: #16a34a; }
         body { font-family: 'Pretendard', sans-serif; background: var(--bg); margin: 0; padding: 0; color: #1e293b; }
         
+        /* 상단 네비게이션 */
         .nav-bar { display: flex; background: var(--primary); position: sticky; top: 0; z-index: 2000; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
         .nav-btn { flex: 1; padding: 18px 0; border: none; background: none; color: #94a3b8; font-weight: bold; cursor: pointer; font-size: 15px; }
         .nav-btn.active { color: white; border-bottom: 4px solid #3b82f6; background: rgba(255,255,255,0.1); }
@@ -16,19 +17,22 @@
         .page-content { display: none; }
         .page-content.active { display: block; }
 
-        /* 카드형 대시보드 */
+        /* 대시보드 카드 */
         .dashboard-container { display: flex; gap: 15px; overflow-x: auto; margin-bottom: 25px; padding: 10px 5px; }
-        .dash-card { min-width: 300px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; cursor: pointer; border: 1px solid #e2e8f0; }
-        .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-        .st-btn { border: none; padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; font-size: 13px; cursor: pointer; }
-        
+        .dash-card { min-width: 300px; background: #fff; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.08); position: relative; cursor: pointer; border: 1px solid #e2e8f0; transition: 0.2s; }
+        .dash-card:hover { transform: translateY(-5px); }
         .vendor-name { font-size: 20px; font-weight: 900; margin-bottom: 10px; display: block; }
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; cursor: pointer; }
+        
+        /* 상태 그리드 (통합재고용) */
+        .status-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
+        .st-btn { border: none; padding: 10px; border-radius: 8px; text-align: center; font-weight: 800; font-size: 13px; cursor: pointer; }
+
+        /* 진행바 (사급자재용) */
         .progress-container { width: 100%; height: 8px; background: #f1f5f9; border-radius: 10px; overflow: hidden; margin-top: 10px; }
         .progress-fill { height: 100%; transition: width 0.5s; }
 
-        /* 배지 및 입력 */
-        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
+        /* 입력 폼 & 테이블 */
         .input-section { background: #f8fafc; padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
         input, select { padding: 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 600; width: 100%; box-sizing: border-box; }
@@ -38,11 +42,13 @@
         table { width: 100%; border-collapse: collapse; min-width: 1100px; }
         th { background: #f1f5f9; padding: 12px; border: 1px solid #ccc; font-size: 12px; }
         td { padding: 14px 8px; border-bottom: 1px solid #eee; text-align: center; font-size: 14px; font-weight: 700; color: #000; }
+        
         .item-link { color: var(--blue); text-decoration: underline; cursor: pointer; }
+        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
         .editable { cursor: pointer; text-decoration: underline; color: #1e40af; }
         .btn-del { color: #dc2626; border: 1px solid #dc2626; background: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer; }
 
-        /* 모달 */
+        /* 모달 팝업 */
         .modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); }
         .modal-content { background: white; margin: 5% auto; padding: 25px; border-radius: 15px; width: 80%; max-width: 900px; max-height: 80vh; overflow-y: auto; position: relative; }
         .close-modal { position: absolute; right: 20px; top: 15px; font-size: 30px; cursor: pointer; color: #aaa; }
@@ -59,10 +65,12 @@
     <div id="page-stock" class="page-content active">
         <div id="stock-dash" class="dashboard-container"></div>
         <div class="input-section"><div class="input-grid">
-            <input type="date" id="st-date"><select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
+            <input type="date" id="st-date">
+            <select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
             <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
             <select id="st-type"><option value="입고">➕ 입고</option><option value="출고">➖ 출고</option><option value="초기">🚀 초기</option></select>
-            <input type="number" id="st-qty" value="0"><button onclick="addStock()" style="background:var(--blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">저장</button>
+            <input type="number" id="st-qty" value="0">
+            <button onclick="addStock()" style="background:var(--blue); color:white; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">저장</button>
         </div></div>
         <div class="search-area">
             <input type="text" id="searchStock" class="search-input" oninput="currentStockFilter={parent:'',level:''}; renderStock();" placeholder="🔍 품목명 검색 (대시보드 클릭 시 자동 필터)">
@@ -87,7 +95,13 @@
     </div>
 </div>
 
-<div id="historyModal" class="modal"><div class="modal-content"><span class="close-modal" onclick="closeModal()">&times;</span><h2 id="modalTitle">상세 이력</h2><div class="table-wrapper"><table style="min-width:100%"><thead><tr><th>일자</th><th>구분</th><th>수량</th><th>관리</th></tr></thead><tbody id="history-body"></tbody></table></div></div></div>
+<div id="historyModal" class="modal">
+    <div class="modal-content">
+        <span class="close-modal" onclick="closeModal()">&times;</span>
+        <h2 id="modalTitle" style="margin-top:0;">상세 이력</h2>
+        <div class="table-wrapper"><table style="min-width:100%"><thead><tr><th>일자</th><th>구분</th><th>수량</th><th>관리</th></tr></thead><tbody id="history-body"></tbody></table></div>
+    </div>
+</div>
 
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
@@ -103,13 +117,10 @@
         page === 'stock' ? loadStock() : loadMaterials();
     }
 
-    // --- 📦 통합재고 로직 ---
+    // --- 📦 통합재고 로직 (4단계 필터 + 이력 팝업) ---
     async function loadStock() {
-        const res = await fetch(STOCK_URL);
-        const data = await res.json();
-        stockData = data ? Object.values(data) : [];
-        updateStockDash();
-        renderStock();
+        const res = await fetch(STOCK_URL); stockData = Object.values(await res.json() || {});
+        updateStockDash(); renderStock();
     }
 
     function getLevel(qty, parent) {
@@ -121,18 +132,12 @@
         return { txt: '양호', ico: '🟢' };
     }
 
-    function calculateSummary() {
-        const summary = {};
-        stockData.forEach(d => {
+    function updateStockDash() {
+        const summary = {}; stockData.forEach(d => {
             const k = (d.item || "").trim() + "|" + (d.spec || "").trim();
-            if(!summary[k]) summary[k] = { current: 0, parent: d.parent || 'CABLE', name: d.item, spec: d.spec };
+            if(!summary[k]) summary[k] = { current: 0, parent: d.parent || 'CABLE' };
             summary[k].current += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
         });
-        return summary;
-    }
-
-    function updateStockDash() {
-        const summary = calculateSummary();
         const parentMap = {};
         Object.values(summary).forEach(s => {
             const p = s.parent.toUpperCase();
@@ -152,7 +157,11 @@
 
     function renderStock() {
         const searchInput = document.getElementById('searchStock').value.toUpperCase();
-        const summary = calculateSummary();
+        const summary = {}; stockData.forEach(d => {
+            const k = (d.item || "").trim() + "|" + (d.spec || "").trim();
+            if(!summary[k]) summary[k] = { name: d.item, spec: d.spec, current: 0, parent: d.parent };
+            summary[k].current += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
+        });
         document.getElementById('stock-body').innerHTML = Object.values(summary).map(s => {
             const res = getLevel(s.current, s.parent);
             const pName = s.parent.toUpperCase();
@@ -171,67 +180,55 @@
 
     function closeModal() { document.getElementById('historyModal').style.display = "none"; }
 
-    // --- ⚙️ 사급자재 로직 (필터링 복구) ---
+    // --- ⚙️ 사급자재 로직 (지연 배지 + Gmail 표) ---
     async function loadMaterials() {
-        const res = await fetch(MATERIAL_URL);
-        const data = await res.json();
-        materialData = data ? Object.values(data) : [];
-        updateMaDash();
-        renderMaterials();
+        const res = await fetch(MATERIAL_URL); materialData = Object.values(await res.json() || {});
+        updateMaDash(); renderMaterials();
     }
 
     function checkDelay(regDate, isOk) {
         if (isOk) return false;
-        const diff = (new Date() - new Date(regDate)) / (1000 * 60 * 60 * 24);
-        return diff >= 7;
+        return (new Date() - new Date(regDate)) / (1000 * 60 * 60 * 24) >= 7;
     }
 
     function updateMaDash() {
         const vMap = {};
         materialData.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayedItems: [] };
-            vMap[m.vendor].total++;
-            const req = m.targetQty || m.req || 0;
-            const recv = m.inQty || m.recv || 0;
-            const isOk = recv >= req;
-            if(isOk) vMap[m.vendor].ok++;
-            if(checkDelay(m.regDate || m.date, isOk)) vMap[m.vendor].delayedItems.push(m.item);
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayedList: [] };
+            const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
+            vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
+            if(checkDelay(m.regDate || m.date, isOk)) vMap[m.vendor].delayedList.push({ item: m.item, project: m.project, req: req, recv: recv });
         });
 
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok/vMap[v].total)*100);
-            const hasDelay = vMap[v].delayedItems.length > 0;
+            const dCount = vMap[v].delayedList.length;
             return `<div class="dash-card" onclick="applyMaFilter('${v}')">
-                ${hasDelay ? `<button class="gmail-btn" onclick="sendGmailWeb('${v}', '${vMap[v].delayedItems.join(', ')}')">Gmail 독촉</button>` : ''}
+                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayedList).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
                 <span class="vendor-name">${v}</span>
                 <span>완료 ${vMap[v].ok} / 전체 ${vMap[v].total} (${per}%)</span>
-                ${hasDelay ? `<div style="color:red; font-size:12px; margin-top:5px;">⚠️ 지연 ${vMap[v].delayedItems.length}건</div>` : ''}
+                ${dCount > 0 ? `<div style="color:red; font-size:12px; margin-top:5px;">⚠️ 지연 ${dCount}건</div>` : ''}
                 <div class="progress-container"><div class="progress-fill" style="width:${per}%; background:${per===100?'var(--green)':'var(--blue)'}"></div></div>
             </div>`;
         }).join('');
     }
 
-    // 📍 사급자재 대시보드 클릭 필터링 복구
-    function applyMaFilter(v) {
-        document.getElementById('searchMa').value = v;
-        renderMaterials();
-    }
-
-    function sendGmailWeb(vendor, items) {
+    function sendGmailTable(vendor, list) {
         event.stopPropagation();
-        const subject = encodeURIComponent(`[SKE 지연알림] ${vendor} 납품 지연 품목 독촉`);
-        const body = encodeURIComponent(`안녕하세요. SKE 관리팀입니다.\n\n지연 품목: ${items}\n\n빠른 확인 부탁드립니다.`);
+        let tableHeader = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요수량 | 입고수량 |\n--------------------------------------------------\n";
+        let tableRows = list.map(r => `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`).join("");
+        const subject = encodeURIComponent(`[SKE 지연알림] ${vendor} 납품 지연 독촉`);
+        const body = encodeURIComponent(`안녕하세요.\n\n7일 이상 지연된 품목 리스트입니다.\n\n${tableHeader}${tableRows}--------------------------------------------------\n빠른 입고 부탁드립니다.`);
         window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${subject}&body=${body}`, '_blank');
     }
+
+    function applyMaFilter(v) { document.getElementById('searchMa').value = v; renderMaterials(); }
 
     function renderMaterials() {
         const filter = document.getElementById('searchMa').value.toUpperCase();
         document.getElementById('ma-body').innerHTML = materialData.sort((a,b)=>b.timestamp-a.timestamp).map((m) => {
-            const req = m.targetQty || m.req || 0;
-            const recv = m.inQty || m.recv || 0;
+            const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req, isDelayed = checkDelay(m.regDate || m.date, isOk);
             if(filter && !(m.vendor + m.project + m.item).toUpperCase().includes(filter)) return '';
-            const isOk = recv >= req;
-            const isDelayed = checkDelay(m.regDate || m.date, isOk);
             const realIdx = materialData.indexOf(m);
             return `<tr><td>${m.regDate || m.date}</td><td>${m.project}</td><td>${m.order || '-'}</td><td class="editable" onclick="edit('ma', ${realIdx}, 'vendor')">${m.vendor}</td><td class="editable" onclick="edit('ma', ${realIdx}, 'item')">${isDelayed ? '<span class="delay-tag">⚠️ 지연</span>' : ''}${m.item}</td><td class="editable" onclick="edit('ma', ${realIdx}, 'targetQty')">${req}</td><td class="editable" onclick="edit('ma', ${realIdx}, 'inQty')">${recv}</td><td><span style="color:${isOk?'var(--green)':'var(--red)'}">${isOk?'완료':'미입고'}</span></td><td><button onclick="copyMa(${realIdx})">복사</button> <button class="btn-del" onclick="del('ma', ${m.timestamp})">삭제</button></td></tr>`;
         }).join('');
