@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE ERP SYSTEM - FINAL STABLE</title>
+    <title>SKE ERP SYSTEM - STABLE FINAL</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
@@ -28,6 +28,7 @@
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
+        .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
         .status-mi { background: #fee2e2; color: #991b1b; } 
         .status-part { background: #fef9c3; color: #854d0e; } 
@@ -88,7 +89,7 @@
             <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
         </div>
         <table>
-            <thead><tr><th>발주일</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>발주량</th><th>입고합계</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>발주일</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>발주량</th><th>입고합계 (수정가능)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
@@ -179,7 +180,7 @@
         }).join('') + (rows.length > 0 ? `<tr class="total-row"><td colspan="4" style="text-align:right;">검색 품목 수량 합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>` : '');
     }
 
-    // --- 사급자재 로직 (Safe Rendering) ---
+    // --- 사급자재 로직 (수정 복구) ---
     function renderMaDash() {
         const vMap = {};
         (db.material || []).forEach(m => {
@@ -212,14 +213,36 @@
             const recv = (m.history || []).reduce((a, b) => a + Number(b.qty || 0), 0);
             const regDate = new Date(m.date || m.timestamp);
             const isDelay = (recv < req) && (today - regDate) / (1000*60*60*24) >= 7;
+            
             let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
+
             return `<tr>
                 <td>${m.date || '-'}</td><td>${m.project || '-'}</td><td>${m.vendor || '-'}</td>
                 <td><span class="editable" onclick="openMaHistory(${m.timestamp})">${isDelay?'⚠️ ':''}${m.item || '품명없음'}</span></td>
-                <td>${req.toLocaleString()}</td><td style="color:var(--erp-accent)">${recv.toLocaleString()}</td>
-                <td>${badge}</td><td><button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+                <td>${req.toLocaleString()}</td>
+                <td style="color:var(--erp-accent);"><span class="editable" onclick="quickEditMaRecv(${m.timestamp})">${recv.toLocaleString()}</span></td>
+                <td>${badge}</td>
+                <td><button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
+    }
+
+    // 📍 리스트에서 입고수량 즉시 수정 (단일 이력으로 저장)
+    async function quickEditMaRecv(ts) {
+        const m = db.material.find(x => x.timestamp === ts);
+        const currentRecv = (m.history || []).reduce((a, b) => a + Number(b.qty || 0), 0);
+        const newVal = prompt("새로운 총 입고 수량을 입력하세요:", currentRecv);
+        
+        if (newVal !== null) {
+            // 기존 이력을 초기화하고 새로운 총량 하나로 대체 (단순화)
+            m.history = [{
+                date: new Date().toISOString().split('T')[0],
+                qty: Number(newVal),
+                memo: "퀵수정",
+                ts: Date.now()
+            }];
+            await saveData('material');
+        }
     }
 
     function openStockHistory(n, s) {
