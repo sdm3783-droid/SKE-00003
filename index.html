@@ -3,13 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE ERP SYSTEM</title>
+    <title>SKE ERP SYSTEM - 최종통합본</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
-            --status-red: #ef4444; --status-brown: #9a3412; --status-yellow: #eab308; --status-green: #10b981;
-            --status-blue: #3b82f6; /* 부분입고용 파란색 추가 */
+            --status-red: #ef4444;    /* 미입고 / 경고 */
+            --status-brown: #9a3412;  /* 주의 (밤색) */
+            --status-yellow: #eab308; /* 부족 / 부분입고 (노랑) */
+            --status-green: #10b981;  /* 입고완료 / 양호 */
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
         
@@ -40,9 +42,9 @@
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; }      /* 미입고: 빨강 */
-        .status-part { background: #e0f2fe; color: #0369a1; }    /* 부분입고: 파랑 추가 */
-        .status-ok { background: #dcfce7; color: #166534; }      /* 입고완료: 초록 */
+        .status-mi { background: #fee2e2; color: #991b1b; } 
+        .status-part { background: #fef9c3; color: #854d0e; } 
+        .status-ok { background: #dcfce7; color: #166534; } 
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
 
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
@@ -73,7 +75,7 @@
         <div id="stock-dash" class="dash-container"></div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="st-date"><input type="text" id="st-code" placeholder="코드">
+                <input type="date" id="st-date"><input type="text" id="st-code" placeholder="품목코드">
                 <select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">입고</option><option value="출고">출고</option></select>
@@ -81,11 +83,11 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 재고 검색 (코드 검색 시 합계 자동 계산)...">
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 코드/품목명 검색 시 합계 자동 계산...">
             <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
         </div>
         <table>
-            <thead><tr><th>코드</th><th>분류</th><th>품목명</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>코드</th><th>분류</th><th>품목명 (이력)</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="stock-table-body"></tbody>
         </table>
     </div>
@@ -94,12 +96,9 @@
         <div id="ma-dash" class="dash-container"></div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="ma-date">
-                <input type="text" id="ma-project" placeholder="프로젝트">
-                <input type="text" id="ma-vendor" placeholder="업체명">
-                <input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요량">
-                <input type="number" id="ma-recv" placeholder="입고량">
+                <input type="date" id="ma-date"><input type="text" id="ma-project" placeholder="프로젝트">
+                <input type="text" id="ma-vendor" placeholder="업체명"><input type="text" id="ma-item" placeholder="자재명">
+                <input type="number" id="ma-req" placeholder="필요량"><input type="number" id="ma-recv" placeholder="입고량">
                 <button class="btn-erp" onclick="addData('material')">발주 등록</button>
             </div>
         </div>
@@ -146,14 +145,12 @@
     }
 
     function renderStockDash() {
-        const sum = {}; 
-        db.stock.forEach(d => {
+        const sum = {}; db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
             if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' };
             sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
         });
-        const stats = {};
-        Object.values(sum).forEach(s => {
+        const stats = {}; Object.values(sum).forEach(s => {
             if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 };
             stats[s.p][getLv(s.q, s.p).t]++;
         });
@@ -174,8 +171,7 @@
 
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
-        const sum = {};
-        let totalQty = 0;
+        const sum = {}; let totalQty = 0;
         db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
             if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' };
@@ -200,23 +196,13 @@
                 <td><span class="editable" onclick="editData('stock_master','${s.name}|${s.spec}','spec')">${s.spec||'-'}</span></td>
                 <td style="color:var(--erp-accent); font-weight:900;">${s.q.toLocaleString()}</td>
                 <td style="color:${lv.c}; font-weight:800;">● ${lv.t}</td>
-                <td>
-                    <button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button>
-                    <button class="del-btn" onclick="deleteData('stock', ${latestTs})">삭제</button>
-                </td>
+                <td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button> <button class="del-btn" onclick="deleteData('stock', ${latestTs})">삭제</button></td>
             </tr>`;
         }).join('');
-        if(rows.length > 0) {
-            html += `<tr class="total-row">
-                <td colspan="4" style="text-align:right; padding-right:20px;">검색 품목 수량 합계</td>
-                <td style="color:var(--erp-primary); font-size:15px;">${totalQty.toLocaleString()}</td>
-                <td colspan="2"></td>
-            </tr>`;
-        }
+        if(rows.length > 0) html += `<tr class="total-row"><td colspan="4" style="text-align:right; padding-right:20px;">검색 품목 수량 합계</td><td style="color:var(--erp-primary); font-size:15px;">${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
         document.getElementById('stock-table-body').innerHTML = html;
     }
 
-    // --- ⚙️ 사급자재 로직 (부분입고 업데이트) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -224,13 +210,12 @@
             const req = m.targetQty || 0, recv = m.inQty || 0, isOk = recv >= req;
             vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
             const regDate = new Date(m.regDate || m.date);
-            const diffDays = (today - regDate) / (1000 * 60 * 60 * 24);
-            if(!isOk && diffDays >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
+            if(!isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
         });
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
             const dCount = vMap[v].delayed.length;
-            const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#3b82f6');
+            const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
             return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
                 <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
                 ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
@@ -252,17 +237,7 @@
             const regDate = new Date(m.regDate || m.date);
             const isDelay = (recv < req) && (today - regDate) / (1000 * 60 * 60 * 24) >= 7;
             const rIdx = db.material.indexOf(m);
-            
-            // 📍 상태 판별 로직 추가
-            let statusBadge = '';
-            if (recv === 0) {
-                statusBadge = '<span class="badge status-mi">미입고</span>';
-            } else if (recv < req) {
-                statusBadge = '<span class="badge status-part">부분입고</span>';
-            } else {
-                statusBadge = '<span class="badge status-ok">입고완료</span>';
-            }
-
+            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
             return `<tr>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
@@ -270,75 +245,37 @@
                 <td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
                 <td><span class="editable" onclick="editData('material', ${rIdx}, 'inQty')" style="color:var(--erp-accent)">${recv}</span></td>
-                <td>${statusBadge}</td>
+                <td>${badge}</td>
                 <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
             </tr>`;
         }).join('');
     }
 
-    // --- 🛠️ 공통 기능 ---
-    function openHistory(name, spec) {
-        const hList = db.stock.filter(d => d.item === name && d.spec === spec).sort((a,b)=>b.timestamp-a.timestamp);
-        document.getElementById('modalTitle').innerText = `📦 ${name} (${spec}) 입출고이력`;
-        document.getElementById('history-content').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th><th>삭제</th></tr></thead><tbody>${hList.map(h => `<tr><td>${h.date}</td><td>${h.type}</td><td>${h.qty}</td><td><button class="del-btn" onclick="deleteData('stock', ${h.timestamp}); closeModal();">삭제</button></td></tr>`).join('')}</tbody></table>`;
-        document.getElementById('historyModal').style.display = 'block';
-    }
-    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-
     async function editData(type, idx, field) {
-        let currentVal = "";
-        if(type === 'stock_master') {
-            const [n, s] = idx.split('|');
-            currentVal = db.stock.find(d => d.item === n && d.spec === s)[field] || "";
-        } else { currentVal = db[type][idx][field]; }
+        let currentVal = type === 'stock_master' ? db.stock.find(d => d.item === idx.split('|')[0] && d.spec === idx.split('|')[1])[field] : db[type][idx][field];
         const val = prompt("수정할 값을 입력하세요:", currentVal);
         if(val !== null) {
-            if(type === 'stock_master') {
-                const [n, s] = idx.split('|');
-                db.stock.filter(d => d.item === n && d.spec === s).forEach(d => d[field] = val);
-                await saveData('stock');
-            } else { db[type][idx][field] = (field.includes('Qty') || field === 'inQty') ? Number(val) : val; await saveData(type); }
+            if(type === 'stock_master') { const [n, s] = idx.split('|'); db.stock.filter(d => d.item === n && d.spec === s).forEach(d => d[field] = val); await saveData('stock'); }
+            else { db[type][idx][field] = field.includes('Qty') || field === 'inQty' ? Number(val) : val; await saveData(type); }
         }
     }
 
     async function addData(type) {
         const ts = Date.now();
-        if(type === 'stock') {
-            db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
-        } else {
-            db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: Number(document.getElementById('ma-recv').value), timestamp: ts });
-        }
+        if(type === 'stock') db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
+        else db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: Number(document.getElementById('ma-recv').value), timestamp: ts });
         await saveData(type);
     }
 
-    async function deleteData(type, ts) { if(!confirm("삭제하시겠습니까?")) return; db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); }
+    async function deleteData(type, ts) { if(confirm("삭제하시겠습니까?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
-    
-    function sendGmailTable(vendor, list) {
-        event.stopPropagation();
-        let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n";
-        list.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
-        const sub = encodeURIComponent(`[SKE ERP] ${vendor} 납기 지연 독촉`);
-        const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
-        window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`, '_blank');
-    }
+    function openHistory(n, s) { const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); document.getElementById('modalTitle').innerText = `📦 ${n} (${s}) 이력`; document.getElementById('history-content').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th><th>삭제</th></tr></thead><tbody>${h.map(x => `<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td><td><button class="del-btn" onclick="deleteData('stock', ${x.timestamp}); closeModal();">삭제</button></td></tr>`).join('')}</tbody></table>`; document.getElementById('historyModal').style.display = 'block'; }
+    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+    function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; document.getElementById('st-type').value = '출고'; } else { const d = db.material[i]; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
+    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
+    function sendGmailTable(v, l) { event.stopPropagation(); let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n"; l.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`); const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`); window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`, '_blank'); }
 
-    function copyRow(type, name, spec, p, code, idx) {
-        if(type === 'stock') { document.getElementById('st-code').value = code; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = name; document.getElementById('st-spec').value = spec; document.getElementById('st-type').value = '출고'; }
-        else { const d = db.material[idx]; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; }
-        window.scrollTo({top:0, behavior:'smooth'});
-    }
-
-    function switchPage(page) {
-        document.querySelectorAll('.page-content').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + page).classList.add('active');
-        document.getElementById('nav-' + page).classList.add('active');
-        page === 'stock' ? loadStock() : loadMaterials();
-    }
-
-    const today = new Date().toISOString().split('T')[0];
-    document.querySelectorAll('input[type="date"]').forEach(i => i.value = today);
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
 </script>
 </body>
