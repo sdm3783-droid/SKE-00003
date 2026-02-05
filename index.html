@@ -71,7 +71,7 @@
             </div>
         </div>
         <div class="search-area">
-            <input type="text" id="searchStock" class="search-input" oninput="renderStock()" placeholder="🔍 숫자를 클릭하거나 품목명 검색">
+            <input type="text" id="searchStock" class="search-input" oninput="clearDashFilter(); renderStock();" placeholder="🔍 숫자를 클릭하거나 품목명 검색">
             <button onclick="resetFilter('stock')" style="padding:10px; border-radius:8px; border:1px solid #ccc; cursor:pointer; font-weight:bold;">초기화</button>
         </div>
         <div class="table-wrapper"><table><thead><tr><th>일자</th><th>상위</th><th>품목</th><th>규격</th><th>구분</th><th>수량</th><th>현재고</th><th>상태</th><th>관리</th></tr></thead><tbody id="stock-body"></tbody></table></div>
@@ -113,7 +113,7 @@
         page === 'stock' ? loadStock() : loadMaterials();
     }
 
-    // --- 📦 통합재고 관리 ---
+    // --- 📦 통합재고 로직 ---
     async function loadStock() {
         const res = await fetch(STOCK_URL);
         const data = await res.json();
@@ -164,6 +164,12 @@
         renderStock();
     }
 
+    // 📍 검색창에 직접 입력 시 대시보드 필터 초기화 로직
+    function clearDashFilter() {
+        const input = document.getElementById('searchStock').value;
+        if (!input.includes(' - ')) { currentStockFilter = { parent: '', level: '' }; }
+    }
+
     function renderStock() {
         const searchInput = document.getElementById('searchStock').value.toUpperCase();
         const body = document.getElementById('stock-body');
@@ -180,8 +186,12 @@
             const res = getLevel(cur, d.parent);
             const parent = (d.parent || "CABLE").toUpperCase();
 
-            if (currentStockFilter.parent && (parent !== currentStockFilter.parent || res.txt !== currentStockFilter.level)) return '';
-            if (!currentStockFilter.parent && searchInput && !((d.item + parent + (d.spec||"")).toUpperCase().includes(searchInput))) return '';
+            // 📍 필터링 조건 수정: 검색창이 공란이거나 전체보기 상태면 다 보여줌
+            if (currentStockFilter.parent) {
+                if (parent !== currentStockFilter.parent || res.txt !== currentStockFilter.level) return '';
+            } else if (searchInput) {
+                if (!((d.item + parent + (d.spec||"")).toUpperCase().includes(searchInput))) return '';
+            }
 
             return `<tr>
                 <td data-label="일자" class="editable" onclick="edit('stock', ${originalIdx}, 'date')">${d.date}</td>
@@ -190,7 +200,7 @@
                 <td data-label="규격">${d.spec || '-'}</td>
                 <td data-label="구분">${d.type}</td>
                 <td data-label="수량">${d.qty}</td>
-                <td data-label="현재고" style="color:var(--blue)">${cur}</td>
+                <td data-label="현재고" style="color:var(--blue)">${cur.toLocaleString()}</td>
                 <td data-label="상태">${res.ico} ${res.txt}</td>
                 <td><button onclick="copy('stock', ${originalIdx})">복사</button> <button class="btn-del" onclick="del('stock', ${d.timestamp})">삭제</button></td>
             </tr>`;
@@ -258,9 +268,7 @@
         if(val !== null) {
             if (field === 'qty' || field === 'inQty' || field === 'targetQty' || field === 'req') {
                 data[field] = Number(val);
-            } else {
-                data[field] = val;
-            }
+            } else { data[field] = val; }
             await save(type);
         }
     }
