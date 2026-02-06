@@ -31,8 +31,6 @@
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; }
-        .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
-        .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
         .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; } 
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
@@ -68,8 +66,7 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px; align-items: center;">
-            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 품목 검색...">
-            <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 통합재고 검색...">
             <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 선택 품목 발주 (Bulk Order)</button>
         </div>
         <table>
@@ -82,20 +79,15 @@
         <div id="ma-dash" class="dash-container"></div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="ma-date">
-                <input type="text" id="ma-order-no" placeholder="발주번호">
-                <input type="text" id="ma-project" placeholder="프로젝트">
-                <input type="text" id="ma-vendor" placeholder="업체명">
-                <input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요량">
-                <input type="number" id="ma-recv" placeholder="입고량">
-                <input type="text" id="ma-receiver" placeholder="수령인">
+                <input type="date" id="ma-date"><input type="text" id="ma-order-no" placeholder="발주번호">
+                <input type="text" id="ma-project" placeholder="프로젝트"><input type="text" id="ma-vendor" placeholder="업체명">
+                <input type="text" id="ma-item" placeholder="자재명"><input type="number" id="ma-req" placeholder="필요량">
+                <input type="number" id="ma-recv" placeholder="입고량"><input type="text" id="ma-receiver" placeholder="수령인">
                 <button class="btn-erp" onclick="addData('material')">등록</button>
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
             <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 발주번호, 업체명 검색...">
-            <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
         </div>
         <table>
             <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
@@ -140,16 +132,14 @@
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    // --- 사급자재현황 전용 GMAIL 독촉 함수 ---
+    // --- 사급자재현황 로직 (완벽 복구) ---
     function sendGmailTable(v, listJson) { 
         event.stopPropagation();
         const recipient = VENDOR_CONTACTS[v] || "";
         const list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
         const orderNos = [...new Set(list.map(r => r.orderNo))].join(", ");
-        
         let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n"; 
         list.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
-        
         const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); 
         const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n\n귀사에서 진행 중인 발주건(${orderNos})과 관련하여 아래 자재들이 7일 이상 지연되고 있습니다.\n\n공정 차질이 발생하지 않도록 조속한 입고와 납기 확인 부탁드립니다.\n\n${t}`);
         window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank');
@@ -181,6 +171,18 @@
         }).join('');
     }
 
+    function renderMaterials() {
+        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
+        document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
+            if(search && !`${m.orderNo}${m.vendor}${m.project}${m.item}`.toUpperCase().includes(search)) return '';
+            const req = m.targetQty || 0; const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
+            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
+            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
+            return `<tr><td>${m.regDate || m.date}</td><td>${m.orderNo || '-'}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td><td>${m.receiver || '-'}</td><td>${req}</td><td style="color:var(--erp-accent)">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,db.material.indexOf(m))">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
+        }).join('');
+    }
+
+    // --- 통합재고관리 및 기타 로직 ---
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => { const k = `${d.item}|${d.spec}`; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
         const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
@@ -200,7 +202,7 @@
         const search = document.getElementById('st-search').value.toUpperCase();
         const sum = {}; let totalQty = 0;
         db.stock.forEach(d => { const k = `${d.item}|${d.spec}`; if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
-        const rows = Object.values(sum).filter(s => { const lv = getLv(s.q, s.p); if(stFilter.p && s.p !== stFilter.p) return false; if(stFilter.l && lv.t !== stFilter.l) return false; if(search && !(`${s.code}${s.name}${s.spec}`.toUpperCase().includes(search))) return false; return true; });
+        const rows = Object.values(sum).filter(s => { const lv = getLv(s.q, s.p); if(stFilter.p && s.p !== stFilter.p) return false; if(stFilter.l && lv.t !== stFilter.l) return false; if(search && !`${s.code}${s.name}${s.spec}`.toUpperCase().includes(search)) return false; return true; });
         rows.forEach(r => totalQty += r.q);
         document.getElementById('stock-table-body').innerHTML = rows.map(s => {
             const lv = getLv(s.q, s.p);
@@ -210,21 +212,6 @@
         if(rows.length > 0) document.getElementById('stock-table-body').innerHTML += `<tr class="total-row"><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
     }
 
-    function renderMaterials() {
-        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
-        document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}`.toUpperCase();
-            if(search && !searchBase.includes(search)) return '';
-            const req = m.targetQty || 0; const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
-            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
-            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
-            return `<tr><td>${m.regDate || m.date}</td><td>${m.orderNo || '-'}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td><td>${m.receiver || '-'}</td><td>${req}</td><td style="color:var(--erp-accent)">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,db.material.indexOf(m))">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
-        }).join('');
-    }
-
-    // 공통 및 기타 함수 (유지)
-    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
-    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
     function openBulkOrderModal() {
         const checked = Array.from(document.querySelectorAll('.st-chk:checked')); if(checked.length === 0) { alert("발주 품목을 선택하세요."); return; }
@@ -232,10 +219,12 @@
         document.getElementById('bulkOrderModal').style.display = 'block';
     }
     function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
-    function printBulkOrder() { /* 영문 PO 출력 로직 */ const v = document.getElementById('blk-vendor').value, d = document.getElementById('blk-date').value, rows = document.querySelectorAll('#bulk-order-list tr'); let trs = Array.from(rows).map((r, i) => `<tr><td>${i+1}</td><td>${r.cells[0].innerText}</td><td>${r.cells[1].innerText}</td><td>${r.querySelector('.blk-qty').value}</td><td>PCS</td></tr>`).join(''); const win = window.open('', '_blank'); win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:10px;text-align:center}th{background:#eee}</style></head><body><h1 style="text-align:center">PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Item</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`); win.document.close(); win.print(); }
-    async function addData(type) { const ts = Date.now(); if(type === 'stock') { db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts }); } else { const recvQty = Number(document.getElementById('ma-recv').value); const history = []; if(recvQty > 0) history.push({ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts }); db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: history }); } await saveData(type); }
+    function printBulkOrder() { const v = document.getElementById('blk-vendor').value, d = document.getElementById('blk-date').value, rows = document.querySelectorAll('#bulk-order-list tr'); let trs = Array.from(rows).map((r, i) => `<tr><td>${i+1}</td><td>${r.cells[0].innerText}</td><td>${r.cells[1].innerText}</td><td>${r.querySelector('.blk-qty').value}</td><td>PCS</td></tr>`).join(''); const win = window.open('', '_blank'); win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:10px;text-align:center}th{background:#eee}</style></head><body><h1 style="text-align:center">PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Item</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`); win.document.close(); win.print(); }
+    async function addData(type) { const ts = Date.now(); if(type === 'stock') { db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts }); } else { const recvQty = Number(document.getElementById('ma-recv').value); const h = []; if(recvQty > 0) h.push({ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts }); db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: h }); } await saveData(type); }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
     async function deleteData(type, ts) { if(confirm("삭제하시겠습니까?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
+    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
     function openHistory(n, s) { const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); document.getElementById('modalTitle').innerText = `📦 \${n} 이력`; document.getElementById('history-content').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th></tr></thead><tbody>\${h.map(x => `<tr><td>\${x.date}</td><td>\${x.type}</td><td>\${x.qty}</td></tr>`).join('')}</tbody></table>`; document.getElementById('historyModal').style.display = 'block'; }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
