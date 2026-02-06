@@ -32,12 +32,12 @@
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
         
-        /* 입력창 및 검색 */
+        /* 입력창 레이아웃 */
         .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; box-sizing: border-box; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
-        .btn-bulk-order { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 6px rgba(139, 92, 246, 0.2); }
+        .btn-bulk-order { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; }
 
         /* 테이블 */
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
@@ -46,6 +46,7 @@
         .status-mi { background: #fee2e2; color: #991b1b; } 
         .status-part { background: #fef9c3; color: #854d0e; } 
         .status-ok { background: #dcfce7; color: #166534; } 
+        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
 
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -58,11 +59,10 @@
         .total-row { background-color: #f1f5f9; font-weight: 900; border-top: 2px solid #cbd5e1; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 800px; max-height: 85vh; overflow-y: auto; }
-        
-        .order-list-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
-        .order-list-table th { font-size: 11px; padding: 8px; background: #f8fafc; border: 1px solid #eee; }
-        .order-list-table td { padding: 8px; border: 1px solid #eee; }
-        .order-list-table input { width: 90%; text-align: center; padding: 5px; border: 1px solid #ddd; }
+
+        /* 발주서 리스트 스타일 */
+        .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .blk-table th, .blk-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
     </style>
 </head>
 <body>
@@ -78,7 +78,6 @@
 <div class="container">
     <div id="page-stock" class="page-content active">
         <div id="stock-dash" class="dash-container"></div>
-        
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="st-date"><input type="text" id="st-code" placeholder="품목코드">
@@ -88,17 +87,15 @@
                 <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
             </div>
         </div>
-
         <div style="margin-bottom:10px; display:flex; gap:10px; align-items: center;">
             <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 코드/품목명 검색 시 합계 자동 계산...">
             <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
             <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 선택 품목 발주 (Bulk Order)</button>
         </div>
-
         <table>
             <thead>
                 <tr>
-                    <th width="40"><input type="checkbox" id="st-check-all" onclick="toggleStAll(this)"></th>
+                    <th width="40"><input type="checkbox" onclick="toggleStAll(this)"></th>
                     <th>코드</th><th>분류</th><th>품목명 (이력)</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th>
                 </tr>
             </thead>
@@ -138,25 +135,19 @@
         <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (Bulk)</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;">
             <div>
-                <label style="font-size:12px; font-weight:800;">Vendor (Vendor)</label>
-                <select id="blk-vendor" style="width:100%; padding:8px;">
-                    <option value="PROTEC">PROTEC (프로텍)</option>
-                    <option value="HANJOO HITECH">HANJOO HITECH (한주하이텍)</option>
-                    <option value="NAVIGANTIS">NAVIGANTIS (내비간티스)</option>
-                </select>
+                <label style="font-size:11px; font-weight:800; color:#64748b;">Vendor</label>
+                <select id="blk-vendor"><option value="PROTEC">PROTEC</option><option value="HANJOO HITECH">HANJOO HITECH</option><option value="NAVIGANTIS">NAVIGANTIS</option></select>
             </div>
             <div>
-                <label style="font-size:12px; font-weight:800;">Delivery Due Date</label>
-                <input type="date" id="blk-date" style="width:100%; padding:7px;">
+                <label style="font-size:11px; font-weight:800; color:#64748b;">Delivery Date</label>
+                <input type="date" id="blk-date">
             </div>
         </div>
-        <table class="order-list-table">
-            <thead>
-                <tr><th>Description / Item</th><th>Specification</th><th width="120">Quantity</th><th width="50">Del</th></tr>
-            </thead>
+        <table class="blk-table">
+            <thead><tr><th>Description</th><th>Specification</th><th width="100">Qty</th><th width="40">Del</th></tr></thead>
             <tbody id="bulk-order-list"></tbody>
         </table>
-        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print English Purchase Order</button>
+        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6;" onclick="printBulkOrder()">Print English PO</button>
     </div>
 </div>
 
@@ -171,10 +162,7 @@
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
-    
-    const VENDOR_CONTACTS = {
-        "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co"
-    };
+    const VENDOR_CONTACTS = { "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co" };
 
     let db = { stock: [], material: [] };
     let stFilter = { p: '', l: '' };
@@ -188,6 +176,7 @@
         renderMaDash(); renderMaterials();
     }
 
+    // --- 통합재고관리 로직 ---
     function getLv(q, p) {
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
@@ -237,7 +226,7 @@
             return true;
         });
         rows.forEach(r => totalQty += r.q);
-        let html = rows.map((s, idx) => {
+        let html = rows.map(s => {
             const lv = getLv(s.q, s.p);
             const entries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
             const latestTs = entries.length > 0 ? Math.max(...entries.map(e => e.timestamp)) : 0;
@@ -256,63 +245,7 @@
         document.getElementById('stock-table-body').innerHTML = html;
     }
 
-    // 발주 관련 함수
-    function toggleStAll(master) { document.querySelectorAll('.st-chk').forEach(c => c.checked = master.checked); }
-
-    function openBulkOrderModal() {
-        const checked = Array.from(document.querySelectorAll('.st-chk:checked'));
-        if(checked.length === 0) { alert("발주할 품목을 체크해주세요."); return; }
-        let html = '';
-        checked.forEach((chk, idx) => {
-            html += `<tr>
-                <td style="text-align:left;">${chk.dataset.item}</td>
-                <td>${chk.dataset.spec}</td>
-                <td><input type="number" class="blk-qty" value="0"></td>
-                <td><button onclick="this.parentElement.parentElement.remove()" style="color:red; border:none; background:none; cursor:pointer;">&times;</button></td>
-            </tr>`;
-        });
-        document.getElementById('bulk-order-list').innerHTML = html;
-        document.getElementById('blk-date').value = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
-        document.getElementById('bulkOrderModal').style.display = 'block';
-    }
-
-    function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
-
-    function printBulkOrder() {
-        const vendor = document.getElementById('blk-vendor').value;
-        const dueDate = document.getElementById('blk-date').value;
-        const rows = document.querySelectorAll('#bulk-order-list tr');
-        let itemsHtml = '';
-        rows.forEach((r, i) => {
-            const name = r.cells[0].innerText;
-            const spec = r.cells[1].innerText;
-            const qty = r.querySelector('.blk-qty').value;
-            itemsHtml += `<tr><td>${i+1}</td><td style="text-align:left;">${name}</td><td>${spec}</td><td>${Number(qty).toLocaleString()}</td><td>PCS</td></tr>`;
-        });
-
-        const win = window.open('', '_blank');
-        win.document.write(`<html><head><style>
-            body { font-family: Arial; padding: 40px; }
-            .title { text-align: center; font-size: 30px; font-weight: bold; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 30px; }
-            table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-            th, td { border: 1px solid #000; padding: 10px; text-align: center; }
-            th { background: #eee; }
-            .info { display: flex; justify-content: space-between; margin-bottom: 20px; }
-        </style></head><body>
-            <div class="title">PURCHASE ORDER</div>
-            <div class="info">
-                <div><strong>To:</strong> ${vendor}<br><strong>Date:</strong> ${new Date().toLocaleDateString()}</div>
-                <div><strong>From:</strong> SKE CO., LTD.<br><strong>Delivery Due:</strong> ${dueDate}</div>
-            </div>
-            <table><thead><tr><th>No</th><th>Description</th><th>Specification</th><th>Quantity</th><th>Unit</th></tr></thead>
-            <tbody>${itemsHtml}</tbody></table>
-            <div style="margin-top:50px; text-align:right;">SKE CO., LTD. (Authorized Signature)</div>
-        </body></html>`);
-        win.document.close();
-        win.print();
-    }
-
-    // 기존 함수들 (변경 없음)
+    // --- 사급자재현황 로직 (절대 수정 금지) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -337,6 +270,8 @@
             </div>`;
         }).join('');
     }
+
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
 
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase();
@@ -365,30 +300,52 @@
         }).join('');
     }
 
+    // --- 발주서 기능 ---
+    function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
+    function openBulkOrderModal() {
+        const checked = Array.from(document.querySelectorAll('.st-chk:checked'));
+        if(checked.length === 0) { alert("발주할 품목을 체크해주세요."); return; }
+        document.getElementById('bulk-order-list').innerHTML = checked.map(c => `<tr><td>${c.dataset.item}</td><td>${c.dataset.spec}</td><td><input type="number" class="blk-qty" value="0"></td><td onclick="this.parentElement.remove()" style="color:red; cursor:pointer;">&times;</td></tr>`).join('');
+        document.getElementById('blk-date').value = new Date(Date.now() + 7*24*60*60*1000).toISOString().split('T')[0];
+        document.getElementById('bulkOrderModal').style.display = 'block';
+    }
+    function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
+    function printBulkOrder() {
+        const v = document.getElementById('blk-vendor').value, d = document.getElementById('blk-date').value, rows = document.querySelectorAll('#bulk-order-list tr');
+        let trs = Array.from(rows).map((r, i) => `<tr><td>${i+1}</td><td>${r.cells[0].innerText}</td><td>${r.cells[1].innerText}</td><td>${r.querySelector('.blk-qty').value}</td><td>PCS</td></tr>`).join('');
+        const win = window.open('', '_blank');
+        win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:10px;text-align:center}th{background:#eee}</style></head><body><h1 style="text-align:center">PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Item</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`);
+        win.document.close(); win.print();
+    }
+
+    // --- 공통 기능 ---
     async function addData(type) {
         const ts = Date.now();
         if(type === 'stock') {
             db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
         } else {
             const recvQty = Number(document.getElementById('ma-recv').value);
-            const history = [];
-            if(recvQty > 0) { history.push({ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록 입고", ts: ts }); }
+            const history = []; if(recvQty > 0) history.push({ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록 입고", ts: ts });
             db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: history });
         }
         await saveData(type);
     }
-
     async function deleteData(type, ts) { if(confirm("삭제하시겠습니까?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
+    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
     function openHistory(n, s) { 
         const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); 
-        document.getElementById('modalTitle').innerText = `📦 ${n} (${s}) 이력`; 
-        document.getElementById('history-content').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th><th>삭제</th></tr></thead><tbody>${h.map(x => `<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td><td><button class="del-btn" onclick="deleteData('stock', ${x.timestamp}); closeModal();">삭제</button></td></tr>`).join('')}</tbody></table>`; 
-        document.getElementById('historyModal').style.display = 'block'; 
+        document.getElementById('modalTitle').innerText = `📦 ${n} 이력`; 
+        document.getElementById('history-content').innerHTML = `<table><thead><tr><th>일자</th><th>구분</th><th>수량</th></tr></thead><tbody>${h.map(x => `<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td></tr>`).join('')}</tbody></table>`;
+        document.getElementById('historyModal').style.display = 'block';
     }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
-    
+    function sendGmailTable(v, l) { 
+        event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; let t = "| 프로젝트 | 품목명 | 필요량 | 입고량 |\n"; JSON.parse(l).forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
+        const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank');
+    }
+
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
 </script>
