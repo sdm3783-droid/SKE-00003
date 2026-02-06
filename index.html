@@ -129,6 +129,14 @@
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
+    
+    // 업체별 담당자 이메일 정보
+    const VENDOR_CONTACTS = {
+        "프로텍": "hknoh@protec21.co.kr",
+        "한주하이텍": "sysuk1@hanjoohitech.com",
+        "내비간티스": "hanswoo@navigantis.co"
+    };
+
     let db = { stock: [], material: [] };
     let stFilter = { p: '', l: '' };
 
@@ -393,11 +401,18 @@
     
     function sendGmailTable(v, l) { 
         event.stopPropagation(); 
+        
+        // 업체명에 매칭되는 이메일 주소 가져오기
+        const recipient = VENDOR_CONTACTS[v] || "";
+        
         let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n"; 
         l.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`); 
+        
         const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); 
         const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`); 
-        window.open(`https://mail.google.com/mail/?view=cm&fs=1&su=${sub}&body=${body}`, '_blank'); 
+        
+        // Gmail 연동 시 수신자(to) 파라미터 추가
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank'); 
     }
 
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
