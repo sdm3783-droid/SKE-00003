@@ -256,51 +256,18 @@
     }
 
     function printBulkOrder() {
-        const vendor = document.getElementById('blk-vendor').value;
-        const date = document.getElementById('blk-date').value;
-        const rows = document.querySelectorAll('#bulk-order-list tr');
-        let trs = '';
-        let grandTotal = 0;
-
+        const vendor = document.getElementById('blk-vendor').value; const date = document.getElementById('blk-date').value; const rows = document.querySelectorAll('#bulk-order-list tr');
+        let trs = ''; let grandTotal = 0;
         rows.forEach((r, i) => {
-            const qty = Number(r.querySelector('.blk-qty').value) || 0;
-            const price = Number(r.querySelector('.blk-price').value) || 0;
-            const amount = qty * price;
-            grandTotal += amount;
+            const qty = Number(r.querySelector('.blk-qty').value) || 0; const price = Number(r.querySelector('.blk-price').value) || 0; const amount = qty * price; grandTotal += amount;
             trs += '<tr><td>' + (i+1) + '</td><td style="text-align:left;">' + r.cells[0].innerText + ' / ' + r.cells[1].innerText + '</td><td>' + qty.toLocaleString() + '</td><td>' + price.toFixed(2) + '</td><td>' + amount.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td><td>ASAP</td></tr>';
         });
-
-        // 1. 전달해주신 SKE 로고 및 결재란 이미지 데이터 (Base64)
-        const headerImg = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAyAAAAByCAYAAAD9W9hWAAAAAXNSR0IArs4c6QAA... (중략) ..."; 
-
         const win = window.open('', '_blank');
-        win.document.write('<html><head><style>' +
-            'body{font-family:Arial; padding:20px; color:#333;}' +
-            '.header-img { width: 100%; max-width: 800px; display: block; margin: 0 auto 20px; }' + // 이미지 스타일
-            '.h-box{text-align:center; border-bottom:2px solid #000; margin-bottom:20px; padding-bottom:10px;}' +
-            'table{width:100%; border-collapse:collapse; margin-top:10px;}' +
-            'th,td{border:1px solid #000; padding:10px; text-align:center; font-size:12px;}' +
-            'th{background:#f2f2f2;}' +
-            '.t-row{background:#fafafa; font-weight:bold;}' +
-            '.info-text{font-size:14px; margin-bottom:10px;}' +
-            '</style></head><body>' +
-            // 2. 상단에 로고와 결재란 이미지 배치
-            '<img src="' + headerImg + '" class="header-img">' +
+        win.document.write('<html><head><style>body{font-family:Arial;padding:40px}.h-box{text-align:center;border-bottom:2px solid #000;margin-bottom:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #000;padding:10px;text-align:center;font-size:13px}th{background:#f2f2f2}.t-row{background:#fafafa;font-weight:bold}</style></head><body>' +
             '<div class="h-box"><h1>PURCHASE ORDER</h1></div>' +
-            '<div class="info-text">' +
-            '<b>FROM:</b> SHIN KWANG Electronics Co., Ltd. &nbsp;&nbsp; ' +
-            '<b>TO:</b> ' + vendor + ' &nbsp;&nbsp; ' +
-            '<b>DATE:</b> ' + date + '</div>' +
-            '<table><thead><tr><th>NO.</th><th>DESCRIPTION</th><th>Q\'TY(m)</th><th>UNIT PRICE(USD)</th><th>AMOUNT(USD)</th><th>Date of request</th></tr></thead><tbody>' + 
-            trs + 
-            '<tr class="t-row"><td colspan="4" style="text-align:right;">GRAND TOTAL (USD)</td><td>' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td><td></td></tr>' +
-            '</tbody></table></body></html>');
-        
-        win.document.close();
-        
-        // 이미지가 로드될 시간을 살짝 준 뒤 인쇄창을 띄웁니다.
-        setTimeout(() => { win.print(); }, 500);
-    
+            '<p><b>FROM:</b> SHIN KWANG Electronics Co., Ltd. / <b>TO:</b> ' + vendor + ' / <b>DATE:</b> ' + date + '</p>' +
+            '<table><thead><tr><th>NO.</th><th>DESCRIPTION</th><th>Q\'TY(m)</th><th>UNIT PRICE(USD)</th><th>AMOUNT(USD)</th><th>Date of request</th></tr></thead><tbody>' + trs + '<tr class="t-row"><td colspan="4" style="text-align:right;">GRAND TOTAL (USD)</td><td>' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td><td></td></tr></tbody></table></body></html>');
+        win.document.close(); win.print();
     }
 
     /* 기타 기능 */
@@ -322,4 +289,3 @@
 </script>
 </body>
 </html>
-
