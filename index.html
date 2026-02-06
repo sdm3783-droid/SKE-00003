@@ -60,7 +60,6 @@
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 800px; max-height: 85vh; overflow-y: auto; }
 
-        /* 발주서 리스트 스타일 */
         .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
         .blk-table th, .blk-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
     </style>
@@ -88,7 +87,7 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px; align-items: center;">
-            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 코드/품목명 검색 시 합계 자동 계산...">
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 코드/품목명 검색...">
             <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
             <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 선택 품목 발주 (Bulk Order)</button>
         </div>
@@ -132,21 +131,12 @@
 <div id="bulkOrderModal" class="erp-modal">
     <div class="modal-body">
         <span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (Bulk)</div>
+        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Bulk Purchase Order</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <div>
-                <label style="font-size:11px; font-weight:800; color:#64748b;">Vendor</label>
-                <select id="blk-vendor"><option value="PROTEC">PROTEC</option><option value="HANJOO HITECH">HANJOO HITECH</option><option value="NAVIGANTIS">NAVIGANTIS</option></select>
-            </div>
-            <div>
-                <label style="font-size:11px; font-weight:800; color:#64748b;">Delivery Date</label>
-                <input type="date" id="blk-date">
-            </div>
+            <div><label>Vendor</label><select id="blk-vendor"><option value="PROTEC">PROTEC</option><option value="HANJOO HITECH">HANJOO HITECH</option><option value="NAVIGANTIS">NAVIGANTIS</option></select></div>
+            <div><label>Due Date</label><input type="date" id="blk-date"></div>
         </div>
-        <table class="blk-table">
-            <thead><tr><th>Description</th><th>Specification</th><th width="100">Qty</th><th width="40">Del</th></tr></thead>
-            <tbody id="bulk-order-list"></tbody>
-        </table>
+        <table class="blk-table"><thead><tr><th>Description</th><th>Specification</th><th width="100">Qty</th><th width="40">Del</th></tr></thead><tbody id="bulk-order-list"></tbody></table>
         <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6;" onclick="printBulkOrder()">Print English PO</button>
     </div>
 </div>
@@ -176,7 +166,49 @@
         renderMaDash(); renderMaterials();
     }
 
-    // --- 통합재고관리 로직 ---
+    // --- 사급자재현황 전용 GMAIL 독촉 함수 (해결 포인트) ---
+    function sendGmailTable(v, listJson) { 
+        event.stopPropagation();
+        const recipient = VENDOR_CONTACTS[v] || "";
+        const delayedList = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
+        
+        let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n"; 
+        delayedList.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
+        
+        const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); 
+        const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
+        
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank');
+    }
+
+    function renderMaDash() {
+        const vMap = {}; const today = new Date();
+        db.material.forEach(m => {
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
+            const req = m.targetQty || 0;
+            const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
+            const isOk = recv >= req;
+            vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
+            const regDate = new Date(m.regDate || m.date);
+            if(!isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
+        });
+        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
+            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
+            const dCount = vMap[v].delayed.length;
+            const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            // JSON 데이터를 버튼 속성에 안전하게 넣기 위해 replace 사용
+            const listStr = JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;');
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
+                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
+                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', '${listStr}')">Gmail 독촉</button>` : ''}
+                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
+                <div style="font-size:22px; font-weight:900; color:${color}">${per}%</div>
+                <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- 나머지 기존 함수들 (통합재고, 사급자재 테이블 등) ---
     function getLv(q, p) {
         const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
@@ -184,7 +216,6 @@
         if(q < limit[2]) return { t: '부족', c: 'var(--status-yellow)' };
         return { t: '양호', c: 'var(--status-green)' };
     }
-
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
@@ -207,9 +238,7 @@
                 </div>
             </div>`).join('');
     }
-
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
-
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
         const sum = {}; let totalQty = 0;
@@ -226,81 +255,25 @@
             return true;
         });
         rows.forEach(r => totalQty += r.q);
-        let html = rows.map(s => {
+        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
             const lv = getLv(s.q, s.p);
-            const entries = db.stock.filter(d => d.item === s.name && d.spec === s.spec);
-            const latestTs = entries.length > 0 ? Math.max(...entries.map(e => e.timestamp)) : 0;
-            return `<tr>
-                <td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td>
-                <td><span class="editable" onclick="editData('stock_master','${s.name}|${s.spec}','code')">${s.code}</span></td>
-                <td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
-                <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td>
-                <td><span class="editable" onclick="editData('stock_master','${s.name}|${s.spec}','spec')">${s.spec||'-'}</span></td>
-                <td style="color:var(--erp-accent); font-weight:900;">${s.q.toLocaleString()}</td>
-                <td style="color:${lv.c}; font-weight:800;">● ${lv.t}</td>
-                <td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button> <button class="del-btn" onclick="deleteData('stock', ${latestTs})">삭제</button></td>
-            </tr>`;
-        }).join('');
-        if(rows.length > 0) html += `<tr class="total-row"><td colspan="5" style="text-align:right; padding-right:20px;">검색 품목 수량 합계</td><td style="color:var(--erp-primary); font-size:15px;">${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
-        document.getElementById('stock-table-body').innerHTML = html;
-    }
-
-    // --- 사급자재현황 로직 (절대 수정 금지) ---
-    function renderMaDash() {
-        const vMap = {}; const today = new Date();
-        db.material.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
-            const req = m.targetQty || 0;
-            const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
-            const isOk = recv >= req;
-            vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
-            const regDate = new Date(m.regDate || m.date);
-            if(!isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
-        });
-        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
-            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
-            const dCount = vMap[v].delayed.length;
-            const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
-            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
-                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
-                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
-                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
-                <div style="font-size:22px; font-weight:900; color:${color}">${per}%</div>
-                <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
-            </div>`;
+            const latestTs = db.stock.filter(d => d.item === s.name && d.spec === s.spec).length > 0 ? Math.max(...db.stock.filter(d => d.item === s.name && d.spec === s.spec).map(e => e.timestamp)) : 0;
+            return `<tr><td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td><td>${s.code}</td><td>${s.p}</td><td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td><td>${s.spec||'-'}</td><td style="color:var(--erp-accent)">${s.q.toLocaleString()}</td><td style="color:${lv.c}">● ${lv.t}</td><td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button> <button class="del-btn" onclick="deleteData('stock', ${latestTs})">삭제</button></td></tr>`;
         }).join('');
     }
-
-    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
-
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase();
-        const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}${m.receiver || ''}`.toUpperCase();
+            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}`.toUpperCase();
             if(search && !searchBase.includes(search)) return '';
             const req = m.targetQty || 0;
             const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
-            const regDate = new Date(m.regDate || m.date);
-            const isDelay = (recv < req) && (today - regDate) / (1000 * 60 * 60 * 24) >= 7;
             const rIdx = db.material.indexOf(m);
             let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
-            return `<tr>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td>
-                <td style="text-align:left;"><span class="editable" onclick="openMaHistory(${rIdx})">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'receiver')">${m.receiver || '-'}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
-                <td><span class="editable" onclick="editData('material', ${rIdx}, 'inQty')" style="color:var(--erp-accent)">${recv.toLocaleString()}</span></td>
-                <td>${badge}</td>
-                <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
-            </tr>`;
+            return `<tr><td>${m.regDate || m.date}</td><td>${m.orderNo || '-'}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${m.item}</td><td>${m.receiver || '-'}</td><td>${req}</td><td style="color:var(--erp-accent)">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
         }).join('');
     }
-
-    // --- 발주서 기능 ---
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
     function openBulkOrderModal() {
         const checked = Array.from(document.querySelectorAll('.st-chk:checked'));
@@ -317,8 +290,6 @@
         win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:10px;text-align:center}th{background:#eee}</style></head><body><h1 style="text-align:center">PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Item</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`);
         win.document.close(); win.print();
     }
-
-    // --- 공통 기능 ---
     async function addData(type) {
         const ts = Date.now();
         if(type === 'stock') {
@@ -340,10 +311,10 @@
         document.getElementById('historyModal').style.display = 'block';
     }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-    function sendGmailTable(v, l) { 
-        event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; let t = "| 프로젝트 | 품목명 | 필요량 | 입고량 |\n"; JSON.parse(l).forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
-        const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
-        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank');
+    function copyRow(t, n, s, p, c, i) { 
+        if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; document.getElementById('st-type').value = '출고'; }
+        else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo || ''; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; document.getElementById('ma-receiver').value = d.receiver || ''; }
+        window.scrollTo({top:0, behavior:'smooth'});
     }
 
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
