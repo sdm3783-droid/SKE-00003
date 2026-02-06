@@ -8,53 +8,35 @@
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
-            --status-red: #ef4444;    /* 미입고 / 경고 */
-            --status-brown: #9a3412;  /* 주의 (밤색) */
-            --status-yellow: #eab308; /* 부족 / 부분입고 (노랑) */
-            --status-green: #10b981;  /* 입고완료 / 양호 */
+            --status-red: #ef4444; --status-brown: #9a3412; --status-yellow: #eab308; --status-green: #10b981;
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
-        
-        /* 네비게이션 */
         .header { background: var(--erp-primary); display: flex; align-items: center; padding: 0 40px; height: 64px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .logo { color: white; font-weight: 900; font-size: 20px; margin-right: 50px; }
         .nav-btn { background: none; border: none; color: #94a3b8; font-weight: 700; font-size: 15px; padding: 0 25px; cursor: pointer; height: 100%; transition: 0.3s; }
         .nav-btn.active { color: white; background: rgba(255,255,255,0.1); box-shadow: inset 0 -4px 0 var(--erp-accent); }
-
         .container { max-width: 1650px; margin: 30px auto; padding: 0 30px; box-sizing: border-box; }
         .page-content { display: none; }
         .page-content.active { display: block; }
-
-        /* 대시보드 */
         .dash-container { display: flex; gap: 20px; overflow-x: auto; margin-bottom: 25px; padding: 5px; }
         .dash-card { min-width: 320px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; cursor: pointer; border-left: 6px solid var(--erp-accent); transition: 0.2s; }
         .dash-card:hover { transform: translateY(-3px); }
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
-        
-        /* 입력창 레이아웃 */
         .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; box-sizing: border-box; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
         .btn-bulk-order { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; }
-
-        /* 테이블 */
-        .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; }
-        .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
-        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; } 
-        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
-
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; }
-        
+        .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
+        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; } 
+        .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
-
-        .total-row { background-color: #f1f5f9; font-weight: 900; border-top: 2px solid #cbd5e1; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 80%; max-width: 800px; max-height: 85vh; overflow-y: auto; }
         .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
@@ -150,7 +132,91 @@
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    // --- 통합재고 이력 팝업 및 삭제 기능 (이미지 요청 반영) ---
+    // --- 데이터 등록 및 수정 로직 (사급자재 파란색 숫자 클릭 시 입력 기능 포함) ---
+    async function editMaInQty(idx) {
+        const val = prompt("추가할 입고 수량을 입력하세요:", "0");
+        if(val !== null && val !== "" && !isNaN(val)) {
+            const addQty = Number(val);
+            const memo = prompt("메모를 입력하세요:", "추가 입고");
+            if(!db.material[idx].history) db.material[idx].history = [];
+            db.material[idx].history.push({ 
+                date: new Date().toISOString().split('T')[0], 
+                qty: addQty, 
+                memo: memo || "추가 입고", 
+                ts: Date.now() 
+            });
+            // 전체 합계 업데이트
+            db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0);
+            await saveData('material');
+        }
+    }
+
+    async function addData(type) {
+        const ts = Date.now();
+        if(type === 'stock') {
+            db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
+        } else if(type === 'material') {
+            const recvQty = Number(document.getElementById('ma-recv').value) || 0;
+            const history = recvQty > 0 ? [{ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts }] : [];
+            db.material.push({
+                regDate: document.getElementById('ma-date').value,
+                orderNo: document.getElementById('ma-order-no').value,
+                project: document.getElementById('ma-project').value,
+                vendor: document.getElementById('ma-vendor').value,
+                item: document.getElementById('ma-item').value,
+                targetQty: Number(document.getElementById('ma-req').value) || 0,
+                inQty: recvQty,
+                receiver: document.getElementById('ma-receiver').value,
+                timestamp: ts,
+                history: history
+            });
+        }
+        await saveData(type);
+    }
+
+    // --- 사급자재현황 렌더링 (파란색 숫자 클릭 이벤트 연결) ---
+    function renderMaterials() {
+        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
+        document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
+            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}`.toUpperCase(); if(search && !searchBase.includes(search)) return '';
+            const req = m.targetQty || 0; 
+            const recv = m.history && m.history.length > 0 ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
+            const rIdx = db.material.indexOf(m); 
+            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
+            return `<tr>
+                <td>${m.regDate || m.date}</td><td>${m.orderNo || '-'}</td><td>${m.project}</td><td>${m.vendor}</td>
+                <td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td>
+                <td>${m.receiver || '-'}</td><td>${req}</td>
+                <td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${recv.toLocaleString()}</td>
+                <td>${badge}</td>
+                <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+            </tr>`;
+        }).join('');
+    }
+
+    // --- 사급자재 대시보드 (보존) ---
+    function renderMaDash() {
+        const vMap = {}; const today = new Date();
+        db.material.forEach(m => {
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
+            const req = m.targetQty || 0; 
+            const recv = m.history && m.history.length > 0 ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            const isOk = recv >= req; vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
+            const regDate = new Date(m.regDate || m.date);
+            if(!isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
+        });
+        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
+            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
+                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
+                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
+                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div><div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
+            </div>`;
+        }).join('');
+    }
+
+    // --- 통합재고 이력 팝업 및 삭제 ---
     function openHistory(n, s) { 
         const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); 
         document.getElementById('modalTitle').innerText = `📦 ${n} (${s}) 이력`; 
@@ -176,37 +242,6 @@
             await saveData('stock');
             closeModal();
         }
-    }
-
-    // --- 사급자재현황 로직 (원본 절대 보존) ---
-    function renderMaDash() {
-        const vMap = {}; const today = new Date();
-        db.material.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
-            const req = m.targetQty || 0; const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
-            const isOk = recv >= req; vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
-            const regDate = new Date(m.regDate || m.date);
-            if(!isOk && (today - regDate) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
-        });
-        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
-            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
-            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
-                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
-                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
-                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div><div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
-            </div>`;
-        }).join('');
-    }
-
-    function renderMaterials() {
-        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
-        document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            const searchBase = `${m.orderNo || ''}${m.vendor}${m.project}${m.item}`.toUpperCase(); if(search && !searchBase.includes(search)) return '';
-            const req = m.targetQty || 0; const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (m.inQty || 0);
-            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
-            const rIdx = db.material.indexOf(m); let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
-            return `<tr><td>${m.regDate || m.date}</td><td>${m.orderNo || '-'}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</td><td>${m.receiver || '-'}</td><td>${req}</td><td style="color:var(--erp-accent)">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
-        }).join('');
     }
 
     // --- 통합재고 로직 ---
@@ -236,7 +271,7 @@
         if(rows.length > 0) document.getElementById('stock-table-body').innerHTML += `<tr class="total-row"><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
     }
 
-    // --- 공통 유틸리티 (수정 없음) ---
+    // --- 공통 유틸리티 ---
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
     function openBulkOrderModal() {
         const checked = Array.from(document.querySelectorAll('.st-chk:checked')); if(checked.length === 0) { alert("발주할 품목을 선택하세요."); return; }
@@ -245,7 +280,6 @@
     }
     function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
     function printBulkOrder() { const v = document.getElementById('blk-vendor').value, d = document.getElementById('blk-date').value, rows = document.querySelectorAll('#bulk-order-list tr'); let trs = Array.from(rows).map((r, i) => `<tr><td>${i+1}</td><td>${r.cells[0].innerText}</td><td>${r.cells[1].innerText}</td><td>${r.querySelector('.blk-qty').value}</td><td>PCS</td></tr>`).join(''); const win = window.open('', '_blank'); win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:12px;text-align:center}th{background:#f0f0f0}</style></head><body><h1>PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Description</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`); win.document.close(); win.print(); }
-    async function addData(type) { const ts = Date.now(); if(type === 'stock') { db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts }); } else { const recvQty = Number(document.getElementById('ma-recv').value); const h = recvQty > 0 ? [{ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts }] : []; db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: h }); } await saveData(type); }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
     async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
