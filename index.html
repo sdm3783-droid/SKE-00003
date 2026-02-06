@@ -134,7 +134,23 @@
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    // --- 사급자재 필드 수정 함수 (복구 완료) ---
+    // --- 사급자재 GMAIL 독촉 함수 (복구 완료) ---
+    function sendGmailTable(v, listJson) { 
+        event.stopPropagation();
+        const recipient = VENDOR_CONTACTS[v] || "";
+        // 문자열로 들어온 경우 JSON 파싱 처리
+        const list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson;
+        
+        let t = "--------------------------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n--------------------------------------------------\n"; 
+        list.forEach(r => t += `| ${r.project} | ${r.item} | ${r.req} | ${r.recv} |\n`);
+        
+        const sub = encodeURIComponent(`[SKE ERP] ${v} 납기 지연 독촉`); 
+        const body = encodeURIComponent(`안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n${t}`);
+        
+        window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${recipient}&su=${sub}&body=${body}`, '_blank');
+    }
+
+    // --- 사급자재 필드 수정 함수 (보존) ---
     async function editData(type, idx, field) {
         let currentVal = db[type][idx][field];
         const val = prompt("수정할 값을 입력하세요:", currentVal);
@@ -144,7 +160,7 @@
         }
     }
 
-    // --- 사급자재 파란색 숫자 클릭 시 입고 추가 함수 ---
+    // --- 사급자재 파란색 숫자 클릭 시 입고 추가 (보존) ---
     async function editMaInQty(idx) {
         const val = prompt("추가할 입고 수량을 입력하세요:", "0");
         if(val !== null && val !== "" && !isNaN(val)) {
@@ -169,7 +185,7 @@
         await saveData(type);
     }
 
-    // --- 사급자재 현황 렌더링 (editable 클래스 및 이벤트 복구) ---
+    // --- 사급자재 현황 렌더링 (GMAIL 버튼 데이터 바인딩 수정) ---
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
@@ -193,7 +209,7 @@
         }).join('');
     }
 
-    // --- 사급자재 대시보드 및 상세 이력 (보존) ---
+    // --- 사급자재 대시보드 (GMAIL 버튼 JSON 데이터 처리 수정) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -205,13 +221,16 @@
         });
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            // 버튼 클릭 시 전달할 JSON 데이터를 문자열로 변환하고 따옴표 충돌 방지
+            const listData = JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;');
             return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
                 <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
-                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', ${JSON.stringify(vMap[v].delayed).replace(/"/g, '&quot;')})">Gmail 독촉</button>` : ''}
+                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmailTable('${v}', '${listData}')">Gmail 독촉</button>` : ''}
                 <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div><div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
             </div>`;
         }).join('');
     }
+
     function openMaHistory(idx) {
         const item = db.material[idx]; const h = item.history || [];
         document.getElementById('modalTitle').innerText = `📋 ${item.item} 입고 이력`;
@@ -220,7 +239,7 @@
     }
     async function deleteMaHistory(idx, hIdx) { if(confirm("삭제?")) { db.material[idx].history.splice(hIdx, 1); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); openMaHistory(idx); } }
 
-    // --- 통합재고 이력 삭제 및 발주 로직 (보존) ---
+    // --- 통합재고 로직 (이력 삭제 및 발주 등 그대로 보존) ---
     function openHistory(n, s) { 
         const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); 
         document.getElementById('modalTitle').innerText = `📦 ${n} (${s}) 이력`; 
@@ -229,7 +248,6 @@
     }
     async function deleteStockHistory(ts) { if(confirm("삭제?")) { db.stock = db.stock.filter(d => d.timestamp !== ts); await saveData('stock'); closeModal(); } }
 
-    // --- 통합재고 로직 ---
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => { const k = `${d.item}|${d.spec}`; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
         const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
@@ -266,13 +284,12 @@
     function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
     function printBulkOrder() { const v = document.getElementById('blk-vendor').value, d = document.getElementById('blk-date').value, rows = document.querySelectorAll('#bulk-order-list tr'); let trs = Array.from(rows).map((r, i) => `<tr><td>${i+1}</td><td>${r.cells[0].innerText}</td><td>${r.cells[1].innerText}</td><td>${r.querySelector('.blk-qty').value}</td><td>PCS</td></tr>`).join(''); const win = window.open('', '_blank'); win.document.write(`<html><head><style>body{font-family:Arial;padding:40px}table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #000;padding:12px;text-align:center}th{background:#f0f0f0}</style></head><body><h1>PURCHASE ORDER</h1><p>Vendor: \${v} / Due Date: \${d}</p><table><tr><th>No</th><th>Description</th><th>Spec</th><th>Qty</th><th>Unit</th></tr>\${trs}</table></body></html>`); win.document.close(); win.print(); }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
-    async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
     function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
     function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-' + p).classList.add('active'); document.getElementById('nav-' + p).classList.add('active'); p === 'stock' ? loadStock() : loadMaterials(); }
     function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
-    function sendGmailTable(v, l) { const recipient = VENDOR_CONTACTS[v] || ""; let t = ""; JSON.parse(l).forEach(r => t += `| \${r.project} | \${r.item} | \${r.req} | \${r.recv} |\n`); window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=\${recipient}&su=독촉&body=\${encodeURIComponent(t)}`, '_blank'); }
+    async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
 
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
