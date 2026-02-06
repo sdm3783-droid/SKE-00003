@@ -93,7 +93,7 @@
         <div style="margin-bottom:10px; display:flex; gap:10px; align-items: center;">
             <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 코드/품목명 검색...">
             <button onclick="document.getElementById('st-search').value=''; stFilter={p:'',l:''}; renderStock();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 초기화</button>
-            <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 선택 품목 발주 (Bulk Order)</button>
+            <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 BIZLINK 발주서 작성</button>
         </div>
         <table>
             <thead><tr><th width="40"><input type="checkbox" onclick="toggleStAll(this)"></th><th>코드</th><th>분류</th><th>품목명 (이력)</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
@@ -117,7 +117,7 @@
             </div>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 발주번호, 업체명, 프로젝트 검색...">
+            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색...">
             <button onclick="document.getElementById('ma-search').value=''; renderMaterials();" style="padding:10px; border-radius:8px; background:#f1f5f9; border:1px solid #ddd; cursor:pointer; font-weight:800;">🔄 필터해제</button>
         </div>
         <table>
@@ -130,28 +130,24 @@
 <div id="bulkOrderModal" class="erp-modal">
     <div class="modal-body">
         <span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (Bulk)</div>
+        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (BIZLINK)</div>
         <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;">
             <div>
-                <label style="font-size:12px; font-weight:800; color:#64748b;">Vendor (Vendor)</label>
-                <select id="blk-vendor" style="width:100%; padding:8px;">
-                    <option value="PROTEC">PROTEC (프로텍)</option>
-                    <option value="HANJOO HITECH">HANJOO HITECH (한주하이텍)</option>
-                    <option value="NAVIGANTIS">NAVIGANTIS (내비간티스)</option>
-                </select>
+                <label style="font-size:12px; font-weight:800; color:#64748b;">Vendor</label>
+                <input type="text" id="blk-vendor" value="BIZLINK" readonly style="background:#e2e8f0;">
             </div>
             <div>
                 <label style="font-size:12px; font-weight:800; color:#64748b;">Delivery Due Date</label>
-                <input type="date" id="blk-date" style="width:100%; padding:7px;">
+                <input type="date" id="blk-date">
             </div>
         </div>
         <table class="blk-table">
             <thead>
-                <tr><th>Description / Item</th><th>Specification</th><th width="120">Quantity</th><th width="50">Del</th></tr>
+                <tr><th>Item Name</th><th>Spec</th><th width="120">Qty</th><th width="50">Del</th></tr>
             </thead>
             <tbody id="bulk-order-list"></tbody>
         </table>
-        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print English Purchase Order</button>
+        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print BIZLINK PO (English)</button>
     </div>
 </div>
 
@@ -167,6 +163,7 @@
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
     
+    // 사급자재현황 전용 업체 정보
     const VENDOR_CONTACTS = {
         "프로텍": "hknoh@protec21.co.kr",
         "한주하이텍": "sysuk1@hanjoohitech.com",
@@ -193,7 +190,7 @@
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    /* 통합재고관리 로직 */
+    /* 통합재고관리 전용 로직 */
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => {
             const k = `${d.item}|${d.spec}`;
@@ -257,7 +254,7 @@
 
     function openBulkOrderModal() {
         const checked = Array.from(document.querySelectorAll('.st-chk:checked'));
-        if(checked.length === 0) { alert("발주할 품목을 선택해주세요."); return; }
+        if(checked.length === 0) { alert("발주할 품목을 체크해주세요."); return; }
         let html = '';
         checked.forEach(chk => {
             html += `<tr>
@@ -287,7 +284,7 @@
         win.document.close(); win.print();
     }
 
-    /* 사급자재현황 로직 (원본 보존) */
+    /* 사급자재현황 로직 (절대 수정 금지 - 원본 보존) */
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
