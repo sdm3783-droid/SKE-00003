@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>SKE 재고관리 SYSTEM</title>
     <style>
-        /* 사용자님의 기존 스타일(CSS)을 그대로 유지합니다 */
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
@@ -63,7 +62,12 @@
         <div class="input-section">
             <div class="input-grid">
                 <input type="date" id="st-date"><input type="text" id="st-code" placeholder="품목코드">
-                <select id="st-parent"><option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option></select>
+                <select id="st-parent">
+                    <option value="CABLE">CABLE</option>
+                    <option value="SLEEVE">SLEEVE</option>
+                    <option value="CONNECTOR">CONNECTOR</option>
+                    <option value="TUBE">TUBE</option>
+                </select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">입고</option><option value="출고">출고</option></select>
                 <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
@@ -139,13 +143,23 @@
     let db = { stock: [], material: [], orders: [] };
     let stFilter = { p: '', l: '' };
 
-    // 초기 데이터 로드
     async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
     async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
     async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json() || {}; db.orders = Object.entries(data).map(([id, val]) => ({...val, id})); renderOrders(); }
 
+    // 카테고리별 재고 임계치 설정 함수 (여기에서 카테고리 기준 수량 수정 가능)
     function getLv(q, p) {
-        const limit = p === 'SLEEVE' ? [1000, 3000, 5000] : [3000, 5000, 10000];
+        let limit;
+        if(p === 'SLEEVE') {
+            limit = [1000, 3000, 5000];
+        } else if(p === 'CONNECTOR') {
+            limit = [500, 1500, 3000]; // 예시 수량
+        } else if(p === 'TUBE') {
+            limit = [200, 500, 1000]; // 예시 수량
+        } else {
+            limit = [3000, 5000, 10000]; // 기본값 (CABLE 등)
+        }
+        
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
         if(q < limit[1]) return { t: '주의', c: 'var(--status-brown)' };
         if(q < limit[2]) return { t: '부족', c: 'var(--status-yellow)' };
@@ -211,7 +225,6 @@
         closeBulkOrderModal(); alert("저장 및 인쇄가 완료되었습니다.");
     }
 
-    /* 기타 핵심 기능들 (기존 기능 유지) */
     function sendGmailTable(v, listJson) { event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; const list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson; let t = "---------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n---------------------------------\n"; list.forEach(r => t += "| " + r.project + " | " + r.item + " | " + r.req + " | " + r.recv + " |\n"); const sub = encodeURIComponent("[SKE ERP] " + v + " 납기 지연 독촉"); const body = encodeURIComponent("안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n" + t); window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + recipient + "&su=" + sub + "&body=" + body, '_blank'); }
     async function editData(type, idx, field) { let currentVal = db[type][idx][field]; const val = prompt("수정할 값을 입력하세요:", currentVal); if(val !== null) { db[type][idx][field] = (field === 'targetQty') ? Number(val) : val; await saveData(type); } }
     async function editMaInQty(idx) { const val = prompt("추가할 입고 수량을 입력하세요:", "0"); if(val !== null && val !== "" && !isNaN(val)) { const addQty = Number(val); const memo = prompt("메모를 입력하세요:", "추가 입고"); if(!db.material[idx].history) db.material[idx].history = []; db.material[idx].history.push({ date: new Date().toISOString().split('T')[0], qty: addQty, memo: memo || "추가 입고", ts: Date.now() }); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); } }
@@ -275,7 +288,6 @@
     async function deleteMaHistory(idx, hIdx) { if(confirm("삭제?")) { db.material[idx].history.splice(hIdx, 1); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); openMaHistory(idx); } }
     function openBulkOrderModal() { const checked = Array.from(document.querySelectorAll('.st-chk:checked')); if(checked.length === 0) return alert("품목을 선택하세요."); document.getElementById('bulk-order-list').innerHTML = checked.map(c => `<tr><td>${c.dataset.item}</td><td>${c.dataset.spec}</td><td><input type="number" class="blk-qty" value="0"></td><td><input type="number" class="blk-price" value="0" step="0.01"></td><td onclick="this.parentElement.remove()" style="color:red; cursor:pointer;">&times;</td></tr>`).join(''); document.getElementById('bulkOrderModal').style.display = 'block'; }
 
-    // 초기 실행
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
 </script>
