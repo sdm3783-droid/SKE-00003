@@ -27,6 +27,7 @@
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; box-sizing: border-box; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
+        .btn-bulk-order { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; }
         .btn-prod { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; }
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
@@ -34,6 +35,7 @@
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; display: block; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
+        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; } 
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .hist-btn { color: #6366f1; border: 1px solid #e0e7ff; background: #f5f3ff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
@@ -49,6 +51,7 @@
     <div class="logo">SKE 재고 SYSTEM</div>
     <div class="nav-group">
         <button id="nav-stock" class="nav-btn active" onclick="switchPage('stock')">통합 재고 관리</button>
+        <button id="nav-orders" class="nav-btn" onclick="switchPage('orders')">발주 이력 관리</button>
         <button id="nav-materials" class="nav-btn" onclick="switchPage('materials')">사급 자재 현황</button>
     </div>
 </header>
@@ -68,10 +71,21 @@
                 <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
             </div>
         </div>
-        <div style="margin-bottom:10px;"><input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 통합재고 검색..."></div>
+        <div style="margin-bottom:10px; display:flex; gap:10px; align-items: center;">
+            <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 통합재고 검색...">
+            <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 발주서 작성</button>
+        </div>
         <table>
             <thead><tr><th width="40"><input type="checkbox" onclick="toggleStAll(this)"></th><th>코드</th><th>분류</th><th>품목명 (이력)</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="stock-table-body"></tbody>
+        </table>
+    </div>
+
+    <div id="page-orders" class="page-content">
+        <div class="input-section"><h3>📝 발주 기록</h3></div>
+        <table>
+            <thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr></thead>
+            <tbody id="order-table-body"></tbody>
         </table>
     </div>
 
@@ -83,13 +97,14 @@
                 <button id="btn-dt-prod" class="btn-prod" style="display:none;" onclick="openProdModal()">🚀 디알텍 생산 등록</button>
             </div>
             <div class="input-grid">
-                <input type="date" id="ma-date"><input type="text" id="ma-vendor" placeholder="업체명">
-                <input type="text" id="ma-project" placeholder="프로젝트"><input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요량"><input type="number" id="ma-recv" placeholder="입고량">
+                <input type="date" id="ma-date"><input type="text" id="ma-order-no" placeholder="발주번호">
+                <input type="text" id="ma-project" placeholder="프로젝트"><input type="text" id="ma-vendor" placeholder="업체명">
+                <input type="text" id="ma-item" placeholder="자재명"><input type="number" id="ma-req" placeholder="필요량">
+                <input type="number" id="ma-recv" placeholder="입고량"><input type="text" id="ma-receiver" placeholder="수령인">
                 <button class="btn-erp" onclick="addData('material')">등록</button>
             </div>
         </div>
-        <div style="margin-bottom:10px;"><input type="text" id="ma-search" oninput="renderMaterials()" style="width:100%; padding:12px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 업체/프로젝트/자재 검색..."></div>
+        <div style="margin-bottom:10px;"><input type="text" id="ma-search" oninput="renderMaterials()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색..."></div>
         <table id="ma-table">
             <thead id="ma-thead"></thead>
             <tbody id="ma-table-body"></tbody>
@@ -106,7 +121,7 @@
         <option value="POWER">POWER SUPPLY CORD (CORE 2ea)</option>
     </select>
     <input type="number" id="prod-qty" value="1" style="width:100%; padding:12px; margin:10px 0;">
-    <button class="btn-prod" style="width:100%; padding:15px;" onclick="submitProduction()">차감 및 완료</button>
+    <button class="btn-prod" style="width:100%; padding:15px;" onclick="submitProduction()">생산 완료 및 차감 실행</button>
 </div></div>
 
 <div id="historyModal" class="erp-modal"><div class="modal-body">
@@ -118,24 +133,27 @@
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
-    const BOM = { "F560": { "CABLE": 10100, "HOOD(male)": 1 }, "DATA": { "CABLE": 830, "HOOD(female)": 1 }, "POWER": { "CORE": 2 } };
+    const ORDER_URL = "https://ske-00003-default-rtdb.firebaseio.com/order_history.json";
     const VENDOR_CONTACTS = { "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co" };
+    const BOM = { "F560": { "CABLE": 10100, "HOOD(male)": 1 }, "DATA": { "CABLE": 830, "HOOD(female)": 1 }, "POWER": { "CORE": 2 } };
 
-    let db = { stock: [], material: [] };
+    let db = { stock: [], material: [], orders: [] };
     let stFilter = { p: '', l: '' };
-    let currentMaVendor = "";
+    let currentMaVendor = ""; 
 
     async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
     async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
+    async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json() || {}; db.orders = Object.entries(data).map(([id, val]) => ({...val, id})); renderOrders(); }
 
     function getLv(q, p) {
-        let lim = (p === 'SLEEVE') ? [1000, 3000, 5000] : (p === 'CONNECTOR') ? [500, 1500, 3000] : [3000, 5000, 10000];
+        let lim = (p === 'SLEEVE') ? [1000, 3000, 5000] : (p === 'CONNECTOR') ? [500, 1500, 3000] : (p === 'TUBE') ? [200, 500, 1000] : [3000, 5000, 10000];
         if(q < lim[0]) return { t: '경고', c: 'var(--status-red)' };
         if(q < lim[1]) return { t: '주의', c: 'var(--status-brown)' };
+        if(q < lim[2]) return { t: '부족', c: 'var(--status-yellow)' };
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    // --- 통합 재고 로직 ---
+    // --- 통합 재고 렌더링 ---
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
         const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
@@ -151,9 +169,10 @@
     }
 
     function renderStock() {
-        const search = document.getElementById('st-search').value.toUpperCase(); const sum = {}; 
+        const search = document.getElementById('st-search').value.toUpperCase(); const sum = {}; let totalQty = 0;
         db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
         const rows = Object.values(sum).filter(s => { const lv = getLv(s.q, s.p); if(stFilter.p && s.p !== stFilter.p) return false; if(stFilter.l && lv.t !== stFilter.l) return false; if(search && !(s.code + s.name + s.spec).toUpperCase().includes(search)) return false; return true; });
+        rows.forEach(r => totalQty += r.q);
         document.getElementById('stock-table-body').innerHTML = rows.map(s => {
             const lv = getLv(s.q, s.p);
             return `<tr><td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td><td>${s.code}</td><td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
@@ -161,9 +180,10 @@
                 <td style="color:var(--erp-accent); font-weight:900;">${s.q.toLocaleString()}</td><td style="color:${lv.c}">● ${lv.t}</td>
                 <td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button></td></tr>`;
         }).join('');
+        if(rows.length > 0) document.getElementById('stock-table-body').innerHTML += `<tr><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
     }
 
-    // --- 사급 자재 로직 ---
+    // --- 사급 자재 렌더링 ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -178,11 +198,10 @@
         });
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
-            const dCount = vMap[v].delayed.length;
-            const color = v === '디알텍' ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            const color = v === '디알텍' ? '#10b981' : (vMap[v].delayed.length > 0 ? '#ef4444' : '#eab308');
             return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
                 <span style="font-size:12px; font-weight:800; color:#64748b;">VENDOR</span>
-                ${dCount > 0 ? `<button class="gmail-btn" onclick="sendGmail('${v}')">Gmail 독촉</button>` : ''}
+                ${vMap[v].delayed.length > 0 ? `<button class="gmail-btn" onclick="sendGmail('${v}')">Gmail 독촉</button>` : ''}
                 <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
                 <div style="font-size:22px; font-weight:900; color:${color}">${per}%</div>
                 <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
@@ -193,45 +212,59 @@
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase();
         const thead = document.getElementById('ma-thead');
+        const today = new Date();
+
         if (currentMaVendor === "디알텍") {
             document.getElementById('ma-title').innerText = "🚀 디알텍 생산 관리 모드";
             document.getElementById('btn-dt-prod').style.display = "block";
-            thead.innerHTML = `<tr><th>일자</th><th>프로젝트</th><th width="300">자재명(수정/이력)</th><th>필요량</th><th>총입고</th><th>생산소모</th><th>현재고</th><th>상태</th><th>관리</th></tr>`;
+            thead.innerHTML = `<tr><th>일자</th><th>프로젝트</th><th width="350">자재명(수정/이력)</th><th>필요량</th><th>총입고</th><th>생산소모</th><th>현재고</th><th>상태</th><th>관리</th></tr>`;
         } else {
             document.getElementById('ma-title').innerText = "📦 사급 자재 현황";
             document.getElementById('btn-dt-prod').style.display = "none";
-            thead.innerHTML = `<tr><th>일자</th><th>업체</th><th>프로젝트</th><th width="300">자재명(수정/이력)</th><th>필요량</th><th>입고량</th><th>상태</th><th>관리</th></tr>`;
+            thead.innerHTML = `<tr><th>일자</th><th>업체</th><th>프로젝트</th><th width="350">자재명(수정/이력)</th><th>수령인</th><th>필요량</th><th>입고량</th><th>상태</th><th>관리</th></tr>`;
         }
 
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
             if(currentMaVendor && m.vendor !== currentMaVendor) return '';
             if(search && !(m.vendor+m.project+m.item).toUpperCase().includes(search)) return '';
+            
             const rIdx = db.material.indexOf(m);
             const req = m.targetQty || 0;
             const recv = m.history ? m.history.filter(h => h.qty > 0).reduce((s, h) => s + Number(h.qty), 0) : 0;
             const cons = m.history ? Math.abs(m.history.filter(h => h.qty < 0).reduce((s, h) => s + Number(h.qty), 0)) : 0;
             const stock = recv - cons;
             const isCable = m.item.toUpperCase().includes("CABLE");
+            const isDelay = (stock < req) && (today - new Date(m.regDate || m.date)) / 86400000 >= 7;
             let badge = stock <= 0 ? '<span class="badge status-mi">미입고</span>' : (stock < req ? '<span class="badge status-part">부족</span>' : '<span class="badge status-ok">입고완료</span>');
 
+            const itemHTML = `<div style="display:flex; justify-content:space-between; align-items:center; padding:0 10px;">
+                <div style="display:flex; align-items:center;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}<span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span></div>
+                <button class="hist-btn" onclick="openMaHistory(${rIdx})">이력</button></div>`;
+
             if (currentMaVendor === "디알텍") {
-                return `<tr><td>${m.regDate || m.date}</td><td>${m.project}</td>
-                    <td style="text-align:left;"><div style="display:flex; justify-content:space-between; align-items:center; padding:0 10px;">
-                    <span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span><button class="hist-btn" onclick="openMaHistory(${rIdx})">이력</button></div></td>
+                return `<tr><td>${m.regDate || m.date}</td><td>${m.project}</td><td style="text-align:left;">${itemHTML}</td>
                     <td>${req.toLocaleString()}</td><td>${isCable?(recv/1000).toFixed(1)+'M':recv}</td>
                     <td style="color:red;">-${cons}</td><td style="color:var(--erp-accent); font-weight:900;">${isCable?(stock/1000).toFixed(1)+'M':stock}</td>
                     <td>${badge}</td><td><button class="del-btn" onclick="deleteData('material',${m.timestamp})">삭제</button></td></tr>`;
             } else {
-                return `<tr><td>${m.regDate || m.date}</td><td>${m.vendor}</td><td>${m.project}</td>
-                    <td style="text-align:left;"><div style="display:flex; justify-content:space-between; align-items:center; padding:0 10px;">
-                    <span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span><button class="hist-btn" onclick="openMaHistory(${rIdx})">이력</button></div></td>
-                    <td>${req.toLocaleString()}</td><td>${recv.toLocaleString()}</td><td>${badge}</td>
-                    <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button></td></tr>`;
+                return `<tr><td>${m.regDate || m.date}</td><td>${m.vendor}</td><td>${m.project}</td><td style="text-align:left;">${itemHTML}</td>
+                    <td>${m.receiver || '-'}</td><td>${req.toLocaleString()}</td><td>${recv.toLocaleString()}</td>
+                    <td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button></td></tr>`;
             }
         }).join('');
     }
 
-    // --- 공통 기능 ---
+    async function submitProduction() {
+        await loadMaterials();
+        const p = document.getElementById('prod-item').value; const q = Number(document.getElementById('prod-qty').value);
+        const recipe = BOM[p]; let upd = false;
+        db.material.forEach(m => { if(m.vendor === "디알텍") { for(let k in recipe) { if(m.item.includes(k)) { 
+            if(!m.history) m.history=[]; m.history.push({date:new Date().toISOString().split('T')[0], qty:-(recipe[k]*q), memo:p+' 생산', ts:Date.now()}); upd=true; 
+        }}}});
+        if(upd) { await saveData('material'); alert("생산 및 자재 차감이 완료되었습니다."); closeProdModal(); } else alert("대상 디알텍 자재가 없습니다.");
+    }
+
+    // --- 공통/유틸 기능 ---
     async function addData(t) {
         await (t==='stock'?loadStock():loadMaterials());
         const ts = Date.now();
@@ -239,27 +272,17 @@
         else { const r = Number(document.getElementById('ma-recv').value); db.material.push({ regDate: document.getElementById('ma-date').value, vendor: document.getElementById('ma-vendor').value, project: document.getElementById('ma-project').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), timestamp: ts, history: r>0?[{date:document.getElementById('ma-date').value, qty:r, memo:"최초입고", ts}]:[] }); }
         await saveData(t);
     }
-
-    async function submitProduction() {
-        await loadMaterials();
-        const p = document.getElementById('prod-item').value; const q = Number(document.getElementById('prod-qty').value);
-        const recipe = BOM[p]; let upd = false;
-        db.material.forEach(m => { if(m.vendor === "디알텍") { for(let k in recipe) { if(m.item.includes(k)) { if(!m.history) m.history=[]; m.history.push({date:new Date().toISOString().split('T')[0], qty:-(recipe[k]*q), memo:p+' 생산', ts:Date.now()}); upd=true; }}}});
-        if(upd) { await saveData('material'); alert("차감 완료!"); closeProdModal(); } else alert("자재 없음");
-    }
-
     async function saveData(t) { await fetch(t==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[t]) }); t==='stock'?loadStock():loadMaterials(); }
-    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('nav-'+p).classList.add('active'); if(p==='stock') loadStock(); else loadMaterials(); }
-    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
     function applyMaFilter(v) { currentMaVendor = (currentMaVendor === v) ? "" : v; renderMaterials(); }
+    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
     function openProdModal() { document.getElementById('prodModal').style.display='block'; }
     function closeProdModal() { document.getElementById('prodModal').style.display='none'; }
     function closeModal() { document.getElementById('historyModal').style.display='none'; }
-    function openHistory(n, s) { const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); document.getElementById('modalTitle').innerText = n + ' 이력'; document.getElementById('history-content').innerHTML = '<table>' + h.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td></tr>`).join('') + '</table>'; document.getElementById('historyModal').style.display = 'block'; }
-    function openMaHistory(i) { const m = db.material[i]; document.getElementById('modalTitle').innerText = m.item+' 이력'; document.getElementById('history-content').innerHTML = '<table>'+(m.history||[]).map(h=>`<tr><td>${h.date}</td><td style="color:${h.qty<0?'red':'blue'}">${h.qty}</td><td>${h.memo||''}</td></tr>`).join('')+'</table>'; document.getElementById('historyModal').style.display = 'block'; }
+    function openMaHistory(i) { const m = db.material[i]; document.getElementById('modalTitle').innerText = m.item+' 이력'; document.getElementById('history-content').innerHTML = '<table>'+(m.history||[]).map(h=>`<tr><td>${h.date}</td><td style="color:${h.qty<0?'red':'blue'}">${h.qty.toLocaleString()}</td><td>${h.memo||''}</td></tr>`).join('')+'</table>'; document.getElementById('historyModal').style.display='block'; }
     async function editData(t, i, f) { const v = prompt("수정 값:", db[t][i][f]); if(v) { db[t][i][f] = (f==='targetQty')?Number(v):v; await saveData(t); } }
-    async function deleteData(t, ts) { if(confirm("삭제?")) { db[t] = db[t].filter(d => d.timestamp !== ts); await saveData(t); } }
+    async function deleteData(t, ts) { if(confirm("삭제하시겠습니까?")) { db[t] = db[t].filter(d => d.timestamp !== ts); await saveData(t); } }
     function copyRow(t, n, s, p, c, i) { if(t==='stock') { document.getElementById('st-code').value=c; document.getElementById('st-parent').value=p; document.getElementById('st-item').value=n; document.getElementById('st-spec').value=s; } else { const m=db.material[i]; document.getElementById('ma-vendor').value=m.vendor; document.getElementById('ma-project').value=m.project; document.getElementById('ma-item').value=m.item; } window.scrollTo(0,0); }
+    function openHistory(n, s) { const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); document.getElementById('modalTitle').innerText = n + ' 이력'; document.getElementById('history-content').innerHTML = '<table>' + h.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td></tr>`).join('') + '</table>'; document.getElementById('historyModal').style.display = 'block'; }
     function sendGmail(v) { window.open("https://mail.google.com/mail/?view=cm&to="+(VENDOR_CONTACTS[v]||"")); }
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
 
