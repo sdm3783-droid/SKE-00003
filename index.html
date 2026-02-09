@@ -3,13 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE 통합 재고관리 SYSTEM</title>
+    <title>SKE 재고관리 SYSTEM</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
             --erp-primary: #1e293b; --erp-accent: #3b82f6; --erp-bg: #f8fafc;
             --status-red: #ef4444; --status-brown: #9a3412; --status-yellow: #eab308; --status-green: #10b981;
-            --drtech-bg: #fdf2f8; --drtech-border: #db2777;
         }
         body { font-family: 'Pretendard', sans-serif; background: var(--erp-bg); margin: 0; color: #1e293b; }
         .header { background: var(--erp-primary); display: flex; align-items: center; padding: 0 40px; height: 64px; position: sticky; top: 0; z-index: 2000; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
@@ -20,37 +19,37 @@
         .page-content { display: none; }
         .page-content.active { display: block; }
         .dash-container { display: flex; gap: 20px; overflow-x: auto; margin-bottom: 25px; padding: 5px; }
-        .dash-card { min-width: 320px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; border-left: 6px solid var(--erp-accent); transition: 0.2s; cursor: pointer; }
+        .dash-card { min-width: 320px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; cursor: pointer; border-left: 6px solid var(--erp-accent); transition: 0.2s; }
         .dash-card:hover { transform: translateY(-3px); }
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-        .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; color: white; display: flex; justify-content: space-between; cursor: pointer; }
+        .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
         .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
         input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; box-sizing: border-box; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
         .btn-bulk-order { background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 900; cursor: pointer; }
-        .dr-produce-box { background: var(--drtech-bg); border: 2px dashed var(--drtech-border); padding: 20px; border-radius: 12px; margin-bottom: 25px; }
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; }
         .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; display: block; }
         .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; }
+        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; } 
         .delay-tag { background: #dc2626; color: white; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: 900; margin-right: 5px; }
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
+        .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .hist-btn { color: #6366f1; border: 1px solid #e0e7ff; background: #f5f3ff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
-        .blk-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
         .blk-table th, .blk-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
     </style>
 </head>
 <body>
 
 <header class="header">
-    <div class="logo">SKE 통합 SYSTEM</div>
+    <div class="logo">SKE 재고 SYSTEM</div>
     <div class="nav-group">
         <button id="nav-stock" class="nav-btn active" onclick="switchPage('stock')">통합 재고 관리</button>
         <button id="nav-orders" class="nav-btn" onclick="switchPage('orders')">발주 이력 관리</button>
@@ -65,8 +64,10 @@
             <div class="input-grid">
                 <input type="date" id="st-date"><input type="text" id="st-code" placeholder="품목코드">
                 <select id="st-parent">
-                    <option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option>
-                    <option value="CONNECTOR">CONNECTOR</option><option value="TUBE">TUBE</option>
+                    <option value="CABLE">CABLE</option>
+                    <option value="SLEEVE">SLEEVE</option>
+                    <option value="CONNECTOR">CONNECTOR</option>
+                    <option value="TUBE">TUBE</option>
                 </select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">입고</option><option value="출고">출고</option></select>
@@ -84,34 +85,34 @@
     </div>
 
     <div id="page-orders" class="page-content">
-        <div class="input-section"><h3>📝 발주 기록</h3><p style="font-size: 13px; color: #64748b;">BIZLINK 인쇄 시 자동으로 기록된 목록입니다.</p></div>
-        <table><thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr></thead><tbody id="order-table-body"></tbody></table>
+        <div class="input-section">
+            <h3 style="margin-top:0;">📝 발주 기록</h3>
+            <p style="font-size: 13px; color: #64748b;">인쇄 시 자동으로 기록된 발주서 목록입니다.</p>
+        </div>
+        <table>
+            <thead>
+                <tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr>
+            </thead>
+            <tbody id="order-table-body"></tbody>
+        </table>
     </div>
 
     <div id="page-materials" class="page-content">
         <div id="ma-dash" class="dash-container"></div>
-        <div class="dr-produce-box">
-            <h4 style="margin:0 0 10px 0; color:var(--drtech-border);">🏭 DRTECH 생산 제품 등록 (BOM 자동 차감)</h4>
-            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px; align-items: end;">
-                <select id="dr-item-select">
-                    <option value="F560">F560 INTERFACE (10,100mm / Hood 1ea)</option>
-                    <option value="DATA">DATA CABLE (830mm / Hood 1ea)</option>
-                    <option value="POWER">POWER CORD (Core 2ea)</option>
-                </select>
-                <input type="number" id="dr-qty" value="1" min="1"><button class="btn-erp" style="background:var(--drtech-border); height:40px;" onclick="produceDrtech()">생산 등록</button>
-            </div>
-        </div>
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="ma-date"><input type="text" id="ma-po" placeholder="발주번호">
+                <input type="date" id="ma-date"><input type="text" id="ma-order-no" placeholder="발주번호">
                 <input type="text" id="ma-project" placeholder="프로젝트"><input type="text" id="ma-vendor" placeholder="업체명">
                 <input type="text" id="ma-item" placeholder="자재명"><input type="number" id="ma-req" placeholder="필요량">
-                <input type="number" id="ma-recv" placeholder="입고량"><button class="btn-erp" onclick="addData('material')">등록</button>
+                <input type="number" id="ma-recv" placeholder="입고량"><input type="text" id="ma-receiver" placeholder="수령인">
+                <button class="btn-erp" onclick="addData('material')">등록</button>
             </div>
         </div>
-        <div style="margin-bottom:10px;"><input type="text" id="ma-search" oninput="renderMaterials()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색..."></div>
+        <div style="margin-bottom:10px; display:flex; gap:10px;">
+            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색...">
+        </div>
         <table>
-            <thead><tr><th>날짜</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th width="300">품명 (수정/이력)</th><th>필요량</th><th>입고량</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th width="300">품명 (수정/이력)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
@@ -120,17 +121,19 @@
 <div id="bulkOrderModal" class="erp-modal">
     <div class="modal-body">
         <span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 BIZLINK 발주서 생성</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px;">
-            <div><label>Vendor</label><input type="text" value="BIZLINK" readonly></div>
+        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (BIZLINK)</div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;">
+            <div><label>Vendor</label><input type="text" id="blk-vendor" value="BIZLINK" readonly style="background:#e2e8f0;"></div>
             <div><label>Due Date</label><input type="date" id="blk-date"></div>
         </div>
-        <table class="blk-table"><thead><tr><th>품목명</th><th>규격</th><th width="80">수량</th><th width="100">단가</th><th width="40">X</th></tr></thead><tbody id="bulk-order-list"></tbody></table>
-        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6;" onclick="printBulkOrder()">인쇄 및 저장</button>
+        <table class="blk-table"><thead><tr><th>Item Name</th><th>Spec</th><th width="100">Qty(m)</th><th width="120">Price(USD)</th><th width="40">Del</th></tr></thead><tbody id="bulk-order-list"></tbody></table>
+        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print BIZLINK PO & Save History</button>
     </div>
 </div>
 
-<div id="historyModal" class="erp-modal"><div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div></div>
+<div id="historyModal" class="erp-modal">
+    <div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div>
+</div>
 
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
@@ -141,142 +144,160 @@
     let db = { stock: [], material: [], orders: [] };
     let stFilter = { p: '', l: '' };
 
-    // [유틸] mm -> M 환산 (사급자재 전용)
-    function formatMaUnit(val, item) {
-        if (!item) return val.toLocaleString();
-        if (item.toUpperCase().includes('CABLE') || item.toUpperCase().includes('INTERFACE')) return (val / 1000).toFixed(2) + ' M';
-        return val.toLocaleString() + ' EA';
-    }
-
-    // [공통] 재고 로딩 및 렌더링
-    async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json()||{}); renderStockDash(); renderStock(); }
-    async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json()||{}); renderMaDash(); renderMaterials(); }
-    async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json()||{}; db.orders = Object.entries(data).map(([id, v]) => ({...v, id})); renderOrders(); }
+    async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
+    async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
+    async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json() || {}; db.orders = Object.entries(data).map(([id, val]) => ({...val, id})); renderOrders(); }
 
     function getLv(q, p) {
-        let lim = (p==='SLEEVE')?[1000,3000,5000]:(p==='CONNECTOR'?[500,1500,3000]:(p==='TUBE'?[200,500,1000]:[3000,5000,10000]));
-        if(q < lim[0]) return { t: '경고', c: 'var(--status-red)' };
-        if(q < lim[1]) return { t: '주의', c: 'var(--status-brown)' };
-        if(q < lim[2]) return { t: '부족', c: 'var(--status-yellow)' };
+        let limit;
+        if(p === 'SLEEVE') { limit = [1000, 3000, 5000]; } 
+        else if(p === 'CONNECTOR') { limit = [500, 1500, 3000]; } 
+        else if(p === 'TUBE') { limit = [200, 500, 1000]; } 
+        else { limit = [3000, 5000, 10000]; }
+        if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
+        if(q < limit[1]) return { t: '주의', c: 'var(--status-brown)' };
+        if(q < limit[2]) return { t: '부족', c: 'var(--status-yellow)' };
         return { t: '양호', c: 'var(--status-green)' };
     }
 
-    // [통합재고] 렌더링
-    function renderStockDash() {
-        const sum = {}; db.stock.forEach(d => { const k = d.item+'|'+d.spec; if(!sum[k]) sum[k] = { q:0, p:d.parent||'CABLE' }; sum[k].q += (d.type==='출고'?-Number(d.qty):Number(d.qty)); });
-        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = {'경고':0,'주의':0,'부족':0,'양호':0}; stats[s.p][getLv(s.q,s.p).t]++; });
-        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
-            <div class="dash-card" onclick="stFilter={p:'${p}',l:''}; renderStock()">
-                <div style="font-size:12px; font-weight:800; color:#64748b;">CATEGORY</div>
-                <div style="font-size:18px; font-weight:900; margin:10px 0;">${p}</div>
-                <div class="st-grid">
-                    <button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'경고'}; renderStock()">경고 ${stats[p]['경고']}</button>
-                    <button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'양호'}; renderStock()">양호 ${stats[p]['양호']}</button>
-                </div>
-            </div>`).join('');
+    function switchPage(p) {
+        document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active'));
+        document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+        document.getElementById('page-' + p).classList.add('active');
+        document.getElementById('nav-' + p).classList.add('active');
+        if(p === 'stock') loadStock();
+        else if(p === 'materials') loadMaterials();
+        else if(p === 'orders') loadOrders();
     }
 
-    function renderStock() {
-        const search = document.getElementById('st-search').value.toUpperCase();
-        const sum = {}; db.stock.forEach(d => { const k = d.item+'|'+d.spec; if(!sum[k]) sum[k] = { code:d.code||'-', name:d.item, spec:d.spec, q:0, p:d.parent||'CABLE' }; sum[k].q += (d.type==='출고'?-Number(d.qty):Number(d.qty)); });
-        const rows = Object.values(sum).filter(s => {
-            const lv = getLv(s.q, s.p);
-            if(stFilter.p && s.p !== stFilter.p) return false;
-            if(stFilter.l && lv.t !== stFilter.l) return false;
-            if(search && !(s.code+s.name+s.spec).toUpperCase().includes(search)) return false;
-            return true;
-        });
-        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
-            const lv = getLv(s.q, s.p);
-            return `<tr><td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td><td>${s.code}</td><td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
-            <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td><td>${s.spec}</td>
-            <td style="font-weight:900; color:var(--erp-accent); cursor:pointer;" onclick="openHistory('${s.name}','${s.spec}')">${s.q.toLocaleString()}</td>
-            <td style="color:${lv.c}">● ${lv.t}</td><td><button class="copy-btn" onclick="copyToInput('${s.code}','${s.p}','${s.name}','${s.spec}')">복사</button></td></tr>`;
-        }).join('');
+    function renderOrders() {
+        const tbody = document.getElementById('order-table-body');
+        tbody.innerHTML = db.orders.sort((a,b) => b.timestamp - a.timestamp).map(o => `
+            <tr>
+                <td>${o.date}</td><td>${o.vendor}</td><td>${o.items ? o.items.length : 0} 건</td>
+                <td style="color:var(--erp-accent); font-weight:900;">$ ${o.totalAmount.toLocaleString(undefined, {minimumFractionDigits:2})}</td>
+                <td><button class="copy-btn" onclick='showOrderDetail(${JSON.stringify(o.items)})'>상세보기</button></td>
+                <td><button class="del-btn" onclick="deleteOrder('${o.id}')">삭제</button></td>
+            </tr>`).join('');
     }
 
-    // [사급자재] 렌더링
-    function renderMaDash() {
-        const vMap = {}; const today = new Date();
-        db.material.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total:0, ok:0, hasDelay: false, delayList: [] };
-            const req = m.targetQty||0; const recv = m.history ? m.history.reduce((s,h)=>s+Number(h.qty),0) : (Number(m.inQty)||0);
-            const isOk = recv >= req; vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
-            const regDate = new Date(m.regDate || m.date);
-            if(!isOk && (today - regDate)/(1000*60*60*24) >= 7) {
-                vMap[m.vendor].hasDelay = true;
-                vMap[m.vendor].delayList.push({ project: m.project, item: m.item, req, recv });
-            }
-        });
-        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
-            const s = vMap[v]; const per = Math.round((s.ok/s.total)*100)||0;
-            let color = s.hasDelay ? "var(--status-red)" : (per === 100 ? "var(--status-green)" : (per > 0 ? "var(--status-yellow)" : "var(--erp-accent)"));
-            return `<div class="dash-card" style="border-left-color:${color}" onclick="document.getElementById('ma-search').value='${v}'; renderMaterials()">
-                ${s.hasDelay ? `<button class="gmail-btn" onclick='sendUrgentGmail("${v}", ${JSON.stringify(s.delayList)})'>Gmail 독촉</button>` : ''}
-                <div style="font-size:18px; font-weight:900;">${v}</div><div style="font-size:22px; color:${color}">${per}%</div>
-            </div>`;
-        }).join('');
+    function showOrderDetail(items) {
+        document.getElementById('modalTitle').innerText = '📦 발주 상세 품목';
+        let html = '<table><thead><tr><th>품목명 / 규격</th><th>수량</th><th>단가(USD)</th><th>금액</th></tr></thead><tbody>';
+        items.forEach(i => html += `<tr><td style="text-align:left;">${i.name} / ${i.spec}</td><td>${i.qty.toLocaleString()}</td><td>$${i.price}</td><td>$${i.amount.toLocaleString()}</td></tr>`);
+        html += '</tbody></table>';
+        document.getElementById('history-content').innerHTML = html;
+        document.getElementById('historyModal').style.display = 'block';
     }
+
+    async function deleteOrder(id) { if(confirm("발주 이력을 삭제하시겠습니까?")) { await fetch(ORDER_URL.replace(".json", `/${id}.json`), { method: 'DELETE' }); loadOrders(); } }
+
+    async function printBulkOrder() {
+        const vendor = document.getElementById('blk-vendor').value;
+        const date = document.getElementById('blk-date').value;
+        const rows = document.querySelectorAll('#bulk-order-list tr');
+        let items = []; let trs = ''; let grandTotal = 0;
+        rows.forEach((r, i) => {
+            const name = r.cells[0].innerText; const spec = r.cells[1].innerText;
+            const qty = Number(r.querySelector('.blk-qty').value) || 0;
+            const price = Number(r.querySelector('.blk-price').value) || 0;
+            const amount = qty * price; grandTotal += amount;
+            items.push({ name, spec, qty, price, amount });
+            trs += `<tr><td>${i+1}</td><td style="text-align:left;">${name} / ${spec}</td><td>${qty.toLocaleString()}</td><td>${price.toFixed(2)}</td><td>${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td>ASAP</td></tr>`;
+        });
+        if(items.length === 0) return alert("품목이 없습니다.");
+        await fetch(ORDER_URL, { method: 'POST', body: JSON.stringify({ timestamp: Date.now(), date, vendor, items, totalAmount: grandTotal }) });
+        const win = window.open('', '_blank');
+        win.document.write('<html><head><style>body{font-family:Arial;padding:40px}.h-box{text-align:center;border-bottom:2px solid #000;margin-bottom:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #000;padding:10px;text-align:center;font-size:13px}th{background:#f2f2f2}.t-row{background:#fafafa;font-weight:bold}</style></head><body>' +
+            '<div class="h-box"><h1>PURCHASE ORDER</h1></div><p><b>FROM:</b> SHIN KWANG Electronics Co., Ltd. / <b>TO:</b> ' + vendor + ' / <b>DATE:</b> ' + date + '</p>' +
+            '<table><thead><tr><th>NO.</th><th>DESCRIPTION</th><th>Q\'TY(m)</th><th>UNIT PRICE(USD)</th><th>AMOUNT(USD)</th><th>Date of request</th></tr></thead><tbody>' + trs + '<tr class="t-row"><td colspan="4" style="text-align:right;">GRAND TOTAL (USD)</td><td>' + grandTotal.toLocaleString(undefined, {minimumFractionDigits: 2}) + '</td><td></td></tr></tbody></table></body></html>');
+        win.document.close(); win.print();
+        closeBulkOrderModal(); alert("저장 및 인쇄가 완료되었습니다.");
+    }
+
+    function sendGmailTable(v, listJson) { event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; const list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson; let t = "---------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n---------------------------------\n"; list.forEach(r => t += "| " + r.project + " | " + r.item + " | " + r.req + " | " + r.recv + " |\n"); const sub = encodeURIComponent("[SKE ERP] " + v + " 납기 지연 독촉"); const body = encodeURIComponent("안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n" + t); window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + recipient + "&su=" + sub + "&body=" + body, '_blank'); }
+    async function editData(type, idx, field) { let currentVal = db[type][idx][field]; const val = prompt("수정할 값을 입력하세요:", currentVal); if(val !== null) { db[type][idx][field] = (field === 'targetQty') ? Number(val) : val; await saveData(type); } }
+    async function editMaInQty(idx) { const val = prompt("추가할 입고 수량을 입력하세요:", "0"); if(val !== null && val !== "" && !isNaN(val)) { const addQty = Number(val); const memo = prompt("메모를 입력하세요:", "추가 입고"); if(!db.material[idx].history) db.material[idx].history = []; db.material[idx].history.push({ date: new Date().toISOString().split('T')[0], qty: addQty, memo: memo || "추가 입고", ts: Date.now() }); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); } }
+    async function deleteStockHistory(ts) { if(confirm("삭제하시겠습니까?")) { db.stock = db.stock.filter(d => d.timestamp !== ts); await saveData('stock'); closeModal(); } }
+    async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
 
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            if(search && !Object.values(m).join('').toUpperCase().includes(search)) return '';
-            const isDr = m.project && m.project.includes('디알텍');
-            const req = m.targetQty||0; const recv = m.history ? m.history.reduce((s,h)=>s+Number(h.qty),0) : (Number(m.inQty)||0);
-            const diffDays = (today - new Date(m.regDate||m.date))/(1000*60*60*24);
-            const isDelay = (recv < req && diffDays >= 7);
-            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">완료</span>');
-
-            return `<tr style="${isDr ? 'background:var(--drtech-bg)' : ''}">
-                <td><span class="editable" onclick="editData('material',${idx},'regDate')">${m.regDate||m.date}</span></td>
-                <td><span class="editable" onclick="editData('material',${idx},'poNo')">${m.poNo || m.orderNo || '-'}</span></td>
-                <td><span class="editable" onclick="editData('material',${idx},'project')">${m.project}</span></td>
-                <td><span class="editable" onclick="editData('material',${idx},'vendor')">${m.vendor}</span></td>
-                <td style="text-align:left;"><div style="display:flex; justify-content:space-between;"><span class="editable" onclick="editData('material',${idx},'item')">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span><button class="hist-btn" onclick="openMaHistory(${idx})">이력</button></div></td>
-                <td><span class="editable" onclick="editData('material',${idx},'targetQty')">${isDr ? formatMaUnit(req, m.item) : req}</span></td>
-                <td style="color:var(--erp-accent); cursor:pointer;" onclick="editMaInQty(${idx})">${isDr ? formatMaUnit(recv, m.item) : recv.toLocaleString()}</td>
+            const rIdx = db.material.indexOf(m); const searchBase = (m.orderNo || '') + m.vendor + m.project + m.item; if(search && !searchBase.toUpperCase().includes(search)) return '';
+            const req = m.targetQty || 0; const recv = m.history && m.history.length > 0 ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
+            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
+            return `<tr>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td>
+                <td style="text-align:left;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; padding: 0 10px; min-height:30px;">
+                        <div style="display:flex; align-items:center; gap:5px;">
+                            ${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}
+                            <span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span>
+                        </div>
+                        <button class="hist-btn" onclick="openMaHistory(${rIdx})" style="flex-shrink:0;">이력</button>
+                    </div>
+                </td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'receiver')">${m.receiver || '-'}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
+                <td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${recv.toLocaleString()}</td>
                 <td>${badge}</td>
-                <td><button class="del-btn" onclick="deleteData('material',${m.timestamp})">삭제</button></td></tr>`;
+                <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+            </tr>`;
         }).join('');
     }
 
-    // [핵심 기능] 디알텍 생산 등록 및 자동 차감
-    async function produceDrtech() {
-        const BOM = { 
-            "F560":[{n:"INTERFACE CABLE",u:10100},{n:"HOOD (male)",u:1}], 
-            "DATA":[{n:"DATA CABLE",u:830},{n:"HOOD (female)",u:1}], 
-            "POWER":[{n:"FERRITE CORE",u:2}] 
-        };
-        const key = document.getElementById('dr-item-select').value; const qty = Number(document.getElementById('dr-qty').value);
-        if(!confirm("자재를 차감하시겠습니까?")) return;
-        const date = new Date().toISOString().split('T')[0];
-        BOM[key].forEach(m => {
-            db.material.push({ regDate: date, poNo: "생산차감", project: "디알텍 (생산)", vendor: "SKE내부", item: m.n, targetQty: 0, inQty: -(m.u*qty), timestamp: Date.now()+Math.random(), history: [{date, qty: -(m.u*qty)}] });
+    function renderMaDash() {
+        const vMap = {}; const today = new Date();
+        db.material.forEach(m => {
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
+            const req = m.targetQty || 0; const recv = m.history && m.history.length > 0 ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            const isOk = recv >= req; vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
+            if(!isOk && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
         });
-        await saveData('material');
+        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
+            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')"><span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>${dCount > 0 ? `<button class="gmail-btn" onclick='sendGmailTable("${v}", ${JSON.stringify(vMap[v].delayed)})'>Gmail 독촉</button>` : ''}<div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div><div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div></div>`;
+        }).join('');
     }
 
-    // [복구] 기능 함수들
-    async function editData(t, i, f) { let v = prompt("값 수정:", db[t][i][f]); if(v!==null){ db[t][i][f]=(f==='targetQty')?Number(v):v; await saveData(t); } }
-    async function editMaInQty(i) { let v = prompt("추가 입고량(음수=소모):","0"); if(v){ if(!db.material[i].history) db.material[i].history=[]; db.material[i].history.push({date:new Date().toISOString().split('T')[0], qty:Number(v)}); await saveData('material'); } }
-    function sendUrgentGmail(v, list) { event.stopPropagation(); let t = "항목: \n" + list.map(l => `- ${l.item} (미입고: ${l.req - l.recv})`).join('\n'); window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${VENDOR_CONTACTS[v]||''}&su=[독촉] ${v} 지연 건&body=${encodeURIComponent(t)}`); }
-    async function printBulkOrder() { const date = document.getElementById('blk-date').value; const rows = document.querySelectorAll('#bulk-order-list tr'); let items = []; rows.forEach(r => items.push({ name: r.cells[0].innerText, spec: r.cells[1].innerText, qty: Number(r.querySelector('.blk-qty').value), price: Number(r.querySelector('.blk-price').value), amount: Number(r.querySelector('.blk-qty').value)*Number(r.querySelector('.blk-price').value) })); await fetch(ORDER_URL, { method: 'POST', body: JSON.stringify({ timestamp: Date.now(), date, vendor: "BIZLINK", items, totalAmount: items.reduce((s,i)=>s+i.amount,0) }) }); window.print(); closeBulkOrderModal(); loadOrders(); }
-    function openMaHistory(i) { const m = db.material[i]; const h = m.history||[]; document.getElementById('modalTitle').innerText = m.item + ' 이력'; document.getElementById('history-content').innerHTML = `<table>` + h.map((x,idx)=>`<tr><td>${x.date}</td><td>${x.qty}</td><td><button class="del-btn" onclick="deleteMaHistoryItem(${i},${idx})">삭제</button></td></tr>`).join('') + `</table>`; document.getElementById('historyModal').style.display='block'; }
-    async function deleteMaHistoryItem(mI, hI) { db.material[mI].history.splice(hI, 1); await saveData('material'); openMaHistory(mI); }
-    async function addData(t) { const ts = Date.now(); if(t==='stock') db.stock.push({date:document.getElementById('st-date').value, code:document.getElementById('st-code').value, parent:document.getElementById('st-parent').value, item:document.getElementById('st-item').value, spec:document.getElementById('st-spec').value, type:document.getElementById('st-type').value, qty:Number(document.getElementById('st-qty').value), timestamp:ts}); else db.material.push({regDate:document.getElementById('ma-date').value, poNo:document.getElementById('ma-po').value, project:document.getElementById('ma-project').value, vendor:document.getElementById('ma-vendor').value, item:document.getElementById('ma-item').value, targetQty:Number(document.getElementById('ma-req').value), inQty:Number(document.getElementById('ma-recv').value), timestamp:ts, history:[]}); await saveData(t); }
-    async function saveData(t) { await fetch(t==='stock'?STOCK_URL:(t==='orders'?ORDER_URL:MATERIAL_URL), {method:'PUT', body:JSON.stringify(db[t])}); t==='stock'?loadStock():(t==='orders'?loadOrders():loadMaterials()); }
-    async function deleteData(t,ts) { if(confirm("삭제?")) { if(t==='orders') { await fetch(ORDER_URL.replace('.json',`/${ts}.json`),{method:'DELETE'}); loadOrders(); } else { db[t]=db[t].filter(d=>d.timestamp!==ts); await saveData(t); } } }
-    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('nav-'+p).classList.add('active'); if(p==='stock') loadStock(); else if(p==='materials') loadMaterials(); else if(p==='orders') loadOrders(); }
-    function openHistory(n,s) { const h = db.stock.filter(d=>d.item===n&&d.spec===s); document.getElementById('modalTitle').innerText = n; document.getElementById('history-content').innerHTML = `<table>` + h.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td></tr>`).join('') + '</table>'; document.getElementById('historyModal').style.display='block'; }
-    function openBulkOrderModal() { const c = Array.from(document.querySelectorAll('.st-chk:checked')); if(c.length===0) return alert("선택바람"); document.getElementById('bulk-order-list').innerHTML = c.map(i=>`<tr><td>${i.dataset.item}</td><td>${i.dataset.spec}</td><td><input type="number" class="blk-qty" value="0"></td><td><input type="number" class="blk-price" value="0" step="0.01"></td><td onclick="this.parentElement.remove()" style="cursor:pointer; color:red">&times;</td></tr>`).join(''); document.getElementById('bulkOrderModal').style.display='block'; }
-    function copyToInput(c, p, n, s) { document.getElementById('st-code').value=c; document.getElementById('st-parent').value=p; document.getElementById('st-item').value=n; document.getElementById('st-spec').value=s; }
-    function closeModal() { document.getElementById('historyModal').style.display='none'; }
-    function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display='none'; }
-    function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
-    function renderOrders() { document.getElementById('order-table-body').innerHTML = db.orders.sort((a,b)=>b.timestamp-a.timestamp).map(o=>`<tr><td>${o.date}</td><td>${o.vendor}</td><td>${o.items?o.items.length:0}</td><td>$${o.totalAmount}</td><td><button class="copy-btn" onclick='showOrderDetail(${JSON.stringify(o.items)})'>상세</button></td><td><button class="del-btn" onclick="deleteData('orders','${o.id}')">삭제</button></td></tr>`).join(''); }
-    function showOrderDetail(items) { document.getElementById('modalTitle').innerText='상세'; document.getElementById('history-content').innerHTML='<table>'+items.map(i=>`<tr><td>${i.name}</td><td>${i.qty}</td><td>$${i.price}</td></tr>`).join('')+'</table>'; document.getElementById('historyModal').style.display='block'; }
+    function renderStock() {
+        const search = document.getElementById('st-search').value.toUpperCase(); const sum = {}; let totalQty = 0;
+        db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const rows = Object.values(sum).filter(s => { const lv = getLv(s.q, s.p); if(stFilter.p && s.p !== stFilter.p) return false; if(stFilter.l && lv.t !== stFilter.l) return false; if(search && !(s.code + s.name + s.spec).toUpperCase().includes(search)) return false; return true; });
+        rows.forEach(r => totalQty += r.q);
+        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
+            const lv = getLv(s.q, s.p);
+            return `<tr><td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td><td>${s.code}</td><td><span class="badge" style="background:#f1f5f9">${s.p}</span></td><td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td><td>${s.spec||'-'}</td><td style="color:var(--erp-accent); font-weight:900; cursor:pointer;" onclick="openHistory('${s.name}','${s.spec}')">${s.q.toLocaleString()}</td><td style="color:${lv.c}">● ${lv.t}</td><td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button></td></tr>`;
+        }).join('');
+        if(rows.length > 0) document.getElementById('stock-table-body').innerHTML += `<tr class="total-row"><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
+    }
 
+    function openHistory(n, s) { 
+        const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); 
+        document.getElementById('modalTitle').innerText = '📦 ' + n + ' (' + s + ') 이력'; 
+        document.getElementById('history-content').innerHTML = '<table><thead><tr><th>일자</th><th>구분</th><th>수량</th><th width="60">삭제</th></tr></thead><tbody>' + h.map(x => `<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty.toLocaleString()}</td><td><button class="del-btn" onclick="deleteStockHistory(${x.timestamp})">삭제</button></td></tr>`).join('') + '</tbody></table>'; 
+        document.getElementById('historyModal').style.display = 'block'; 
+    }
+
+    async function addData(type) { const ts = Date.now(); if(type === 'stock') { db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts }); } else { const recvQty = Number(document.getElementById('ma-recv').value); const h = recvQty > 0 ? [{ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts }] : []; db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: h }); } await saveData(type); }
+    async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
+    function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
+    function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
+    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
+    function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
+    function renderStockDash() { const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); }); const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; }); document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join(''); }
+    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
+    function openMaHistory(idx) { const item = db.material[idx]; const h = item.history || []; document.getElementById('modalTitle').innerText = '📋 ' + item.item + ' 입고 이력'; document.getElementById('history-content').innerHTML = '<table><thead><tr><th>일자</th><th>수량</th><th>삭제</th></tr></thead><tbody>' + h.map((x, i) => `<tr><td>${x.date}</td><td>${x.qty}</td><td><button class="del-btn" onclick="deleteMaHistory(${idx}, ${i})">삭제</button></td></tr>`).join('') + '</tbody></table>'; document.getElementById('historyModal').style.display = 'block'; }
+    async function deleteMaHistory(idx, hIdx) { if(confirm("삭제?")) { db.material[idx].history.splice(hIdx, 1); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); openMaHistory(idx); } }
+    function openBulkOrderModal() { const checked = Array.from(document.querySelectorAll('.st-chk:checked')); if(checked.length === 0) return alert("품목을 선택하세요."); document.getElementById('bulk-order-list').innerHTML = checked.map(c => `<tr><td>${c.dataset.item}</td><td>${c.dataset.spec}</td><td><input type="number" class="blk-qty" value="0"></td><td><input type="number" class="blk-price" value="0" step="0.01"></td><td onclick="this.parentElement.remove()" style="color:red; cursor:pointer;">&times;</td></tr>`).join(''); document.getElementById('bulkOrderModal').style.display = 'block'; }
+
+    document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
 </script>
 </body>
