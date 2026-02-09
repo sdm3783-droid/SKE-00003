@@ -41,10 +41,9 @@
         .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 950px; max-height: 85vh; overflow-y: auto; }
-        /* 성적서 전용 스타일 */
-        .iqc-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; background: #f1f5f9; padding: 15px; border-radius: 10px; }
-        .iqc-item-box { text-align: center; }
-        .iqc-item-box label { font-size: 12px; color: #64748b; font-weight: 800; display: block; margin-bottom: 5px; }
+        .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
+        .blk-table th, .blk-table td { border: 1px solid #eee; padding: 8px; text-align: center; }
+        .total-row { background: #f8fafc; font-weight: 900; }
     </style>
 </head>
 <body>
@@ -88,6 +87,7 @@
     </div>
 
     <div id="page-orders" class="page-content">
+        <div class="input-section"><h3>📝 발주 기록</h3><p style="font-size: 13px; color: #64748b;">인쇄 시 자동으로 기록된 발주서 목록입니다.</p></div>
         <table>
             <thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr></thead>
             <tbody id="order-table-body"></tbody>
@@ -95,14 +95,9 @@
     </div>
 
     <div id="page-iqc" class="page-content">
-        <div class="input-section">
-            <h3 style="margin-top:0;">📋 수입검사성적서 현황</h3>
-            <p style="font-size: 13px; color: #64748b;">입고 시 자동 생성됩니다. 항목을 클릭하여 엑셀 양식 데이터를 입력하세요.</p>
-        </div>
+        <div class="input-section"><h3>📋 수입검사성적서 관리</h3><p style="font-size: 13px; color: #64748b;">입고 시 자동 생성됩니다.</p></div>
         <table>
-            <thead>
-                <tr><th>입고일</th><th>거래처</th><th>품명/규격</th><th>수량</th><th>외관</th><th>규격</th><th>가공</th><th>판정</th><th>검사자</th><th>관리</th></tr>
-            </thead>
+            <thead><tr><th>입고일</th><th>거래처</th><th>품명/규격</th><th>수량</th><th>외관</th><th>규격</th><th>가공</th><th>판정</th><th>검사자</th><th>관리</th></tr></thead>
             <tbody id="iqc-table-body"></tbody>
         </table>
     </div>
@@ -118,6 +113,7 @@
                 <button class="btn-erp" onclick="addData('material')">등록</button>
             </div>
         </div>
+        <div style="margin-bottom:10px;"><input type="text" id="ma-search" oninput="renderMaterials()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색..."></div>
         <table>
             <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
@@ -125,40 +121,30 @@
     </div>
 </div>
 
-<div id="iqcModal" class="erp-modal">
-    <div class="modal-body">
-        <span onclick="closeIqcModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <h2 style="color:var(--erp-accent); margin-top:0;">📝 수입검사 성적서 입력</h2>
-        <div class="input-grid" style="margin-bottom:20px; border-bottom:1px solid #eee; padding-bottom:20px;">
-            <div><label>입고일</label><input type="text" id="iqc-view-date" readonly></div>
-            <div><label>거래처</label><input type="text" id="iqc-view-vendor" readonly></div>
-            <div><label>수량</label><input type="text" id="iqc-view-qty" readonly></div>
-        </div>
-        <label>품명 및 규격</label>
-        <input type="text" id="iqc-view-item" style="margin-bottom:20px;" readonly>
-
-        <label style="font-weight:900; color:var(--erp-primary);">검사 내용 및 결과 (○/X 선택)</label>
-        <div class="iqc-grid" style="margin-top:10px; margin-bottom:20px;">
-            <div class="iqc-item-box"><label>외관</label><select id="iqc-in-visual"><option value="○">○</option><option value="X">X</option></select></div>
-            <div class="iqc-item-box"><label>규격</label><select id="iqc-in-spec"><option value="○">○</option><option value="X">X</option></select></div>
-            <div class="iqc-item-box"><label>가공</label><select id="iqc-in-process"><option value="○">○</option><option value="X">X</option></select></div>
-            <div class="iqc-item-box"><label>조립</label><select id="iqc-in-assembly"><option value="○">○</option><option value="X">X</option></select></div>
-            <div class="iqc-item-box"><label>회로</label><select id="iqc-in-circuit"><option value="○">○</option><option value="X">X</option></select></div>
-            <div class="iqc-item-box"><label>유해물질</label><select id="iqc-in-rohs"><option value="○">○</option><option value="X">X</option></select></div>
-        </div>
-
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px; margin-bottom:15px;">
-            <div><label>불량 시 조치내용</label><textarea id="iqc-in-action" rows="3"></textarea></div>
-            <div><label>비고</label><textarea id="iqc-in-memo" rows="3"></textarea></div>
-        </div>
-        <label>검사자</label>
-        <input type="text" id="iqc-in-inspector" value="박 웅">
-        
-        <button class="btn-erp" style="width:100%; margin-top:20px; padding:15px; background:var(--erp-accent);" onclick="submitIqc()">성적서 저장하기</button>
+<div id="iqcModal" class="erp-modal"><div class="modal-body">
+    <span onclick="closeIqcModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
+    <h2 style="color:var(--erp-accent);">📝 성적서 입력</h2>
+    <div class="input-grid">
+        <input type="text" id="iqc-in-date" readonly><input type="text" id="iqc-in-vendor" readonly><input type="text" id="iqc-in-item" readonly>
     </div>
-</div>
+    <div class="input-grid" style="margin-top:15px; background:#f1f5f9; padding:15px; border-radius:10px;">
+        <select id="iqc-in-visual"><option value="○">외관: ○</option><option value="X">외관: X</option></select>
+        <select id="iqc-in-spec"><option value="○">규격: ○</option><option value="X">규격: X</option></select>
+        <select id="iqc-in-process"><option value="○">가공: ○</option><option value="X">가공: X</option></select>
+    </div>
+    <textarea id="iqc-in-action" placeholder="불량 조치내용" style="margin-top:15px;"></textarea>
+    <input type="text" id="iqc-in-inspector" value="박 웅" style="margin-top:10px;">
+    <button class="btn-erp" style="width:100%; margin-top:20px;" onclick="submitIqc()">저장</button>
+</div></div>
 
-<div id="bulkOrderModal" class="erp-modal"><div class="modal-body">...</div></div>
+<div id="bulkOrderModal" class="erp-modal"><div class="modal-body">
+    <span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
+    <h2 style="color:#8b5cf6;">📦 PO 생성</h2>
+    <div class="input-grid"><input type="text" id="blk-vendor" value="BIZLINK" readonly><input type="date" id="blk-date"></div>
+    <table class="blk-table"><thead><tr><th>품목</th><th>규격</th><th>Qty</th><th>Price</th><th>삭제</th></tr></thead><tbody id="bulk-order-list"></tbody></table>
+    <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6;" onclick="printBulkOrder()">발주서 출력/저장</button>
+</div></div>
+
 <div id="historyModal" class="erp-modal"><div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div></div>
 
 <script>
@@ -166,6 +152,7 @@
     const MATERIAL_URL = "https://ske-0001-default-rtdb.firebaseio.com/inventory.json";
     const ORDER_URL = "https://ske-00003-default-rtdb.firebaseio.com/order_history.json";
     const IQC_URL = "https://ske-00003-default-rtdb.firebaseio.com/iqc_reports.json";
+    const VENDOR_CONTACTS = { "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co" };
 
     let db = { stock: [], material: [], orders: [], iqc: [] };
     let stFilter = { p: '', l: '' };
@@ -181,13 +168,10 @@
         document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
         document.getElementById('page-' + p).classList.add('active');
         document.getElementById('nav-' + p).classList.add('active');
-        if(p === 'stock') loadStock();
-        else if(p === 'materials') loadMaterials();
-        else if(p === 'orders') loadOrders();
-        else if(p === 'iqc') loadIqc();
+        if(p === 'stock') loadStock(); else if(p === 'materials') loadMaterials(); else if(p === 'orders') loadOrders(); else if(p === 'iqc') loadIqc();
     }
 
-    // ---------------- [기존 기능 로직 보존] ----------------
+    // 1. 재고 임계치 & 대시보드 복구
     function getLv(q, p) {
         let limit = p === 'SLEEVE' ? [1000, 3000, 5000] : (p === 'CONNECTOR' ? [500, 1500, 3000] : (p === 'TUBE' ? [200, 500, 1000] : [3000, 5000, 10000]));
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
@@ -199,9 +183,31 @@
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
         const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
-        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join('');
+        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
+            <div class="dash-card" onclick="setStFilter('${p}', '')">
+                <span style="font-size:12px; font-weight:800;">CATEGORY</span>
+                <div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div>
+                <div class="st-grid">
+                    <button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button>
+                    <button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button>
+                    <button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button>
+                    <button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button>
+                </div>
+            </div>`).join('');
     }
 
+    function renderStock() {
+        const search = document.getElementById('st-search').value.toUpperCase(); const sum = {}; let totalQty = 0;
+        db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const rows = Object.values(sum).filter(s => { const lv = getLv(s.q, s.p); if(stFilter.p && s.p !== stFilter.p) return false; if(stFilter.l && lv.t !== stFilter.l) return false; if(search && !(s.code + s.name + s.spec).toUpperCase().includes(search)) return false; return true; });
+        rows.forEach(r => totalQty += r.q);
+        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
+            const lv = getLv(s.q, s.p);
+            return `<tr><td><input type="checkbox" class="st-chk" data-item="${s.name}" data-spec="${s.spec}"></td><td>${s.code}</td><td><span class="badge" style="background:#f1f5f9">${s.p}</span></td><td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td><td>${s.spec||'-'}</td><td style="color:var(--erp-accent); font-weight:900; cursor:pointer;" onclick="openHistory('${s.name}','${s.spec}')">${s.q.toLocaleString()}</td><td style="color:${lv.c}">● ${lv.t}</td><td><button class="copy-btn" onclick="copyRow('stock','${s.name}','${s.spec}','${s.p}','${s.code}')">복사</button></td></tr>`;
+        }).join('') + `<tr class="total-row"><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
+    }
+
+    // 2. 사급자재 대시보드 & 지연표시 & 독촉메뉴 복구
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
@@ -211,82 +217,58 @@
             if(recv < req && (today - new Date(m.regDate || m.date)) / 86400000 >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv });
         });
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
-            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
-            return `<div class="dash-card" style="border-left-color:${per===100?'#10b981':'#ef4444'}" onclick="applyMaFilter('${v}')"><span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span><div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900;">${per} %</div></div>`;
+            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')">
+                <span style="font-size:12px; font-weight:800;">VENDOR</span>
+                ${dCount > 0 ? `<button class="gmail-btn" onclick='sendGmailTable("${v}", ${JSON.stringify(vMap[v].delayed)})'>Gmail 독촉</button>` : ''}
+                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div>
+            </div>`;
         }).join('');
     }
 
-    // ---------------- [수입검사성적서 로직] ----------------
+    function renderMaterials() {
+        const search = document.getElementById('ma-search').value.toUpperCase(); const today = new Date();
+        document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
+            if(search && !((m.orderNo||'')+m.vendor+m.project+m.item).toUpperCase().includes(search)) return '';
+            const req = m.targetQty || 0; const recv = m.history ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / 86400000 >= 7;
+            let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
+            return `<tr><td>${m.regDate||m.date}</td><td>${m.orderNo||'-'}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}<span class="editable" onclick="openMaHistory(${idx})">${m.item}</span></td><td>${m.receiver||'-'}</td><td>${req}</td><td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${idx})">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
+        }).join('');
+    }
+
+    // 3. 독촉 메일 기능 복구
+    function sendGmailTable(v, listJson) { event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; const list = listJson; let t = "---------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n---------------------------------\n"; list.forEach(r => t += "| " + r.project + " | " + r.item + " | " + r.req + " | " + r.recv + " |\n"); const sub = encodeURIComponent("[SKE ERP] " + v + " 납기 지연 독촉"); const body = encodeURIComponent("안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n" + t); window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + recipient + "&su=" + sub + "&body=" + body, '_blank'); }
+
+    // 4. 데이터 추가 및 IQC 연동
     async function addData(type) {
         const ts = Date.now();
         if(type === 'stock') {
-            const date = document.getElementById('st-date').value;
-            const item = document.getElementById('st-item').value;
-            const spec = document.getElementById('st-spec').value;
-            const qty = Number(document.getElementById('st-qty').value);
-            const vendor = document.getElementById('st-vendor').value || "-";
-            const inout = document.getElementById('st-type').value;
-
+            const date = document.getElementById('st-date').value; const item = document.getElementById('st-item').value; const spec = document.getElementById('st-spec').value; const qty = Number(document.getElementById('st-qty').value); const inout = document.getElementById('st-type').value; const vendor = document.getElementById('st-vendor').value || "-";
             db.stock.push({ date, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item, spec, type: inout, qty, timestamp: ts });
-            
-            if(inout === '입고') {
-                await fetch(IQC_URL, { method: 'POST', body: JSON.stringify({
-                    date, vendor, item: `${item} / ${spec}`, qty, visual: '○', specRes: '○', process: '○', assembly: '○', circuit: '○', rohs: '○', action: '', memo: '', inspector: '박 웅', status: '대기', timestamp: ts
-                })});
-            }
+            if(inout === '입고') await fetch(IQC_URL, { method: 'POST', body: JSON.stringify({ date, vendor, item: `${item} / ${spec}`, qty, visual: '○', specRes: '○', process: '○', status: '대기', timestamp: ts }) });
         } else {
-            db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: Number(document.getElementById('ma-recv').value), timestamp: ts });
+            const inQty = Number(document.getElementById('ma-recv').value); const h = inQty > 0 ? [{ date: document.getElementById('ma-date').value, qty: inQty, memo: "최초 등록", ts: ts }] : [];
+            db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: h });
         }
         await saveData(type);
     }
 
-    function renderIqc() {
-        document.getElementById('iqc-table-body').innerHTML = db.iqc.sort((a,b)=>b.timestamp-a.timestamp).map((m, i) => `
-            <tr>
-                <td>${m.date}</td><td>${m.vendor}</td><td style="text-align:left;">${m.item}</td><td>${m.qty}</td>
-                <td>${m.visual}</td><td>${m.specRes}</td><td>${m.process}</td>
-                <td><span class="badge ${m.status==='완료'?'status-ok':'status-mi'}">${m.status}</span></td><td>${m.inspector}</td>
-                <td><button class="copy-btn" onclick="openIqcForm(${i})">입력</button></td>
-            </tr>
-        `).join('');
-    }
+    // 5. IQC 기능
+    function renderIqc() { document.getElementById('iqc-table-body').innerHTML = db.iqc.sort((a,b)=>b.timestamp-a.timestamp).map((m, i) => `<tr><td>${m.date}</td><td>${m.vendor}</td><td style="text-align:left;">${m.item}</td><td>${m.qty}</td><td>${m.visual}</td><td>${m.specRes}</td><td>${m.process}</td><td><span class="badge ${m.status==='완료'?'status-ok':'status-mi'}">${m.status}</span></td><td>${m.inspector||'박 웅'}</td><td><button class="copy-btn" onclick="openIqcForm(${i})">입력</button></td></tr>`).join(''); }
+    function openIqcForm(idx) { const data = db.iqc[idx]; currentIqcId = data.id; document.getElementById('iqc-in-date').value = data.date; document.getElementById('iqc-in-vendor').value = data.vendor; document.getElementById('iqc-in-item').value = data.item; document.getElementById('iqcModal').style.display = 'block'; }
+    async function submitIqc() { const id = currentIqcId; const updated = { ...db.iqc.find(x => x.id === id), visual: document.getElementById('iqc-in-visual').value, specRes: document.getElementById('iqc-in-spec').value, process: document.getElementById('iqc-in-process').value, action: document.getElementById('iqc-in-action').value, inspector: document.getElementById('iqc-in-inspector').value, status: '완료' }; await fetch(IQC_URL.replace(".json", `/${id}.json`), { method: 'PUT', body: JSON.stringify(updated) }); closeIqcModal(); loadIqc(); }
 
-    function openIqcForm(idx) {
-        const data = db.iqc[idx];
-        currentIqcId = data.id;
-        document.getElementById('iqc-view-date').value = data.date;
-        document.getElementById('iqc-view-vendor').value = data.vendor;
-        document.getElementById('iqc-view-item').value = data.item;
-        document.getElementById('iqc-view-qty').value = data.qty;
-        document.getElementById('iqcModal').style.display = 'block';
-    }
-
-    async function submitIqc() {
-        const updated = {
-            ...db.iqc.find(x => x.id === currentIqcId),
-            visual: document.getElementById('iqc-in-visual').value,
-            specRes: document.getElementById('iqc-in-spec').value,
-            process: document.getElementById('iqc-in-process').value,
-            assembly: document.getElementById('iqc-in-assembly').value,
-            circuit: document.getElementById('iqc-in-circuit').value,
-            rohs: document.getElementById('iqc-in-rohs').value,
-            action: document.getElementById('iqc-in-action').value,
-            memo: document.getElementById('iqc-in-memo').value,
-            inspector: document.getElementById('iqc-in-inspector').value,
-            status: '완료'
-        };
-        await fetch(IQC_URL.replace(".json", `/${currentIqcId}.json`), { method: 'PUT', body: JSON.stringify(updated) });
-        alert("성적서가 저장되었습니다.");
-        closeIqcModal(); loadIqc();
-    }
-
-    // ---------------- [기타 공통 함수들 유지] ----------------
+    // 나머지 보조 기능들 (복사, 모달닫기 등)
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
     function closeIqcModal() { document.getElementById('iqcModal').style.display = 'none'; }
-    function renderStock() { /* 기존 renderStock 소스 그대로 */ }
-    function renderOrders() { /* 기존 renderOrders 소스 그대로 */ }
+    function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
+    function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
-    
+    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
+    function copyRow(t, n, s, p, c) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } window.scrollTo({top:0, behavior:'smooth'}); }
+    function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
+
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
     loadStock();
 </script>
