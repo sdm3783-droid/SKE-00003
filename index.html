@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SKE 재고관리 SYSTEM - DRTECH Integrated</title>
+    <title>SKE 재고관리 SYSTEM (Fixed & Integrated)</title>
     <style>
         @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
         :root { 
@@ -21,31 +21,20 @@
         .page-content.active { display: block; }
         .dash-container { display: flex; gap: 20px; overflow-x: auto; margin-bottom: 25px; padding: 5px; }
         .dash-card { min-width: 320px; background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); position: relative; cursor: pointer; border-left: 6px solid var(--erp-accent); transition: 0.2s; }
-        .dash-card:hover { transform: translateY(-3px); }
         .st-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
         .st-btn { border: none; padding: 10px; border-radius: 8px; font-weight: 800; font-size: 13px; cursor: pointer; display: flex; justify-content: space-between; color: white; }
         .input-section { background: #fff; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid #e2e8f0; }
         .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 10px; }
-        input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; box-sizing: border-box; }
+        input, select { padding: 10px; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 13px; font-weight: 700; width: 100%; background: #fcfcfc; }
         .btn-erp { background: var(--erp-primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: 800; cursor: pointer; }
-        
-        /* 디알텍 전용 스타일 */
-        .dr-produce-box { background: var(--drtech-bg); border: 2px dashed var(--drtech-border); padding: 20px; border-radius: 12px; margin-bottom: 25px; }
-        .dr-grid { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 10px; align-items: end; }
-        .dr-badge { background: var(--drtech-border); color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px; font-weight: 900; margin-right: 5px; }
-
+        .dr-produce-box { background: var(--drtech-bg); border: 2px dashed var(--drtech-border); padding: 20px; border-radius: 12px; margin-bottom: 20px; }
         table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; }
         th { background: #f8fafc; padding: 12px; color: #64748b; font-size: 12px; border-bottom: 1px solid #e2e8f0; }
         td { padding: 10px; text-align: center; border-bottom: 1px solid #f1f5f9; font-size: 13px; font-weight: 600; }
-        .editable { cursor: pointer; font-weight: 700; transition: 0.2s; padding: 5px; border-radius: 4px; display: block; }
-        .editable:hover { background: #f1f5f9; color: var(--erp-accent); }
         .badge { padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 800; display: inline-block; }
-        .status-mi { background: #fee2e2; color: #991b1b; } .status-ok { background: #dcfce7; color: #166534; } 
-        .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
+        .status-mi { background: #fee2e2; color: #991b1b; } .status-part { background: #fef9c3; color: #854d0e; } .status-ok { background: #dcfce7; color: #166534; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
-        .blk-table { width: 100%; border-collapse: collapse; }
-        .blk-table th, .blk-table td { border: 1px solid #eee; padding: 8px; }
     </style>
 </head>
 <body>
@@ -74,57 +63,35 @@
                 <input type="number" id="st-qty" value="0"><button class="btn-erp" onclick="addData('stock')">등록</button>
             </div>
         </div>
+        <div style="margin-bottom:10px;"><input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="width:100%; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 통합재고 검색..."></div>
         <table>
-            <thead><tr><th width="40"><input type="checkbox"></th><th>코드</th><th>분류</th><th>품목명</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>코드</th><th>분류</th><th>품목명</th><th>규격</th><th>재고</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="stock-table-body"></tbody>
         </table>
     </div>
 
     <div id="page-orders" class="page-content">
         <div class="input-section"><h3>📝 발주 기록</h3></div>
-        <table>
-            <thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr></thead>
-            <tbody id="order-table-body"></tbody>
-        </table>
+        <table id="order-table"><thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세</th><th>삭제</th></tr></thead><tbody id="order-table-body"></tbody></table>
     </div>
 
     <div id="page-materials" class="page-content">
         <div id="ma-dash" class="dash-container"></div>
-
         <div class="dr-produce-box">
-            <h4 style="margin:0 0 10px 0; color:var(--drtech-border);">🏭 디알텍(DRTECH) 생산 등록 (BOM 자동 차감)</h4>
-            <div class="dr-grid">
-                <div>
-                    <label style="font-size:11px; font-weight:800;">생산 제품 선택</label>
-                    <select id="dr-item-select">
-                        <option value="F560">F560 INTERFACE CABLE (CABLE: 10,100mm / HOOD: male 1ea)</option>
-                        <option value="DATA">DATA CABLE(FLAATZ560) (CABLE: 830mm / HOOD: female 1ea)</option>
-                        <option value="POWER">POWER SUPPLY CORD (CORE: 2ea)</option>
-                    </select>
-                </div>
-                <div>
-                    <label style="font-size:11px; font-weight:800;">생산 수량(개)</label>
-                    <input type="number" id="dr-qty" value="1" min="1">
-                </div>
-                <button class="btn-erp" style="background:var(--drtech-border); height:40px;" onclick="produceDrtech()">생산 등록</button>
+            <h4 style="margin:0 0 10px 0; color:var(--drtech-border);">🏭 DRTECH 생산 및 자동 차감</h4>
+            <div style="display:grid; grid-template-columns: 2fr 1fr 1fr; gap:10px;">
+                <select id="dr-item-select"><option value="F560">F560 INTERFACE (10,100mm / Hood 1)</option><option value="DATA">DATA CABLE (830mm / Hood 1)</option><option value="POWER">POWER CORD (Core 2)</option></select>
+                <input type="number" id="dr-qty" value="1" min="1">
+                <button class="btn-erp" style="background:var(--drtech-border)" onclick="produceDrtech()">생산 등록</button>
             </div>
         </div>
-
         <div class="input-section">
             <div class="input-grid">
-                <input type="date" id="ma-date">
-                <input type="text" id="ma-project" placeholder="프로젝트" value="디알텍">
-                <input type="text" id="ma-vendor" placeholder="업체명">
-                <input type="text" id="ma-item" placeholder="자재명">
-                <input type="number" id="ma-req" placeholder="필요량(mm/ea)">
-                <input type="number" id="ma-recv" placeholder="입고량(mm/ea)">
+                <input type="date" id="ma-date"><input type="text" id="ma-project" placeholder="프로젝트" value="디알텍">
+                <input type="text" id="ma-vendor" placeholder="업체명"><input type="text" id="ma-item" placeholder="자재명">
+                <input type="number" id="ma-req" placeholder="필요량"><input type="number" id="ma-recv" placeholder="입고량">
                 <button class="btn-erp" onclick="addData('material')">사급 등록</button>
             </div>
-        </div>
-        
-        <div style="margin-bottom:10px; display:flex; gap:10px;">
-            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 프로젝트/자재 검색...">
-            <button class="btn-erp" style="background:var(--drtech-color)" onclick="applyMaFilter('디알텍')">🎯 디알텍 전용뷰</button>
         </div>
         <table>
             <thead><tr><th>날짜</th><th>프로젝트</th><th>업체</th><th>품명</th><th>필요/생산</th><th>입고/잔량</th><th>상태</th><th>관리</th></tr></thead>
@@ -133,7 +100,7 @@
     </div>
 </div>
 
-<div id="historyModal" class="erp-modal"><div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div></div>
+<div id="historyModal" class="erp-modal"><div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px;"></div><div id="history-content"></div></div></div>
 
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
@@ -141,76 +108,87 @@
     const ORDER_URL = "https://ske-00003-default-rtdb.firebaseio.com/order_history.json";
 
     let db = { stock: [], material: [], orders: [] };
+    let stFilter = { p: '', l: '' };
 
-    // 1. 디알텍 BOM 정의
-    const DR_BOM = {
-        "F560": { name: "F560 INTERFACE CABLE", mats: [{ n: "CABLE (10.1M)", u: 10100 }, { n: "HOOD (male)", u: 1 }] },
-        "DATA": { name: "DATA CABLE", mats: [{ n: "CABLE (0.83M)", u: 830 }, { n: "HOOD (female)", u: 1 }] },
-        "POWER": { name: "POWER SUPPLY CORD", mats: [{ n: "FERRITE CORE", u: 2 }] }
-    };
+    // [복구] 기존 재고 레벨 판단 로직
+    function getLv(q, p) {
+        let lim = (p === 'SLEEVE') ? [1000, 3000, 5000] : (p === 'CONNECTOR' ? [500, 1500, 3000] : [3000, 5000, 10000]);
+        if(q < lim[0]) return { t: '경고', c: 'var(--status-red)' };
+        if(q < lim[1]) return { t: '주의', c: 'var(--status-brown)' };
+        if(q < lim[2]) return { t: '부족', c: 'var(--status-yellow)' };
+        return { t: '양호', c: 'var(--status-green)' };
+    }
 
-    // 2. 단위 환산 유틸리티 (mm -> M)
-    function formatVal(val, item) {
-        if (!item) return val.toLocaleString();
-        if (item.toUpperCase().includes('CABLE') || item.toUpperCase().includes('INTERFACE')) {
-            return (val / 1000).toFixed(2) + ' M';
-        }
+    // [복구] 기존 재고 대시보드 렌더링
+    function renderStockDash() {
+        const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = {'경고':0,'주의':0,'부족':0,'양호':0}; stats[s.p][getLv(s.q, s.p).t]++; });
+        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
+            <div class="dash-card" onclick="stFilter={p:'${p}',l:''}; renderStock()">
+                <span style="font-size:12px; font-weight:800; color:#64748b;">CATEGORY</span>
+                <div style="font-size:18px; font-weight:900; margin-bottom:10px;">${p}</div>
+                <div class="st-grid">
+                    <button class="st-btn" style="background:var(--status-red)">경고 ${stats[p]['경고']}</button>
+                    <button class="st-btn" style="background:var(--status-brown)">주의 ${stats[p]['주의']}</button>
+                </div>
+            </div>`).join('');
+    }
+
+    // [복구] 사급 자재 대시보드 (업체별 현황)
+    function renderMaDash() {
+        const vMap = {};
+        db.material.forEach(m => {
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0 };
+            const req = m.targetQty || 0; 
+            const recv = m.history ? m.history.reduce((s, h) => s + Number(h.qty), 0) : (Number(m.inQty) || 0);
+            if(recv >= req && req > 0) vMap[m.vendor].ok++;
+            vMap[m.vendor].total++;
+        });
+        document.getElementById('ma-dash').innerHTML = Object.keys(vMap).map(v => {
+            const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0;
+            return `<div class="dash-card" style="border-left-color:var(--erp-accent)">
+                <span style="font-size:12px; font-weight:800;">VENDOR</span>
+                <div style="font-size:18px; font-weight:900;">${v}</div>
+                <div style="font-size:22px; color:var(--erp-accent)">${per}%</div>
+            </div>`;
+        }).join('');
+    }
+
+    // [통합] mm -> M 환산 (디알텍 전용)
+    function formatUnit(val, item) {
+        if (item && (item.includes('CABLE') || item.includes('INTERFACE'))) return (val / 1000).toFixed(2) + ' M';
         return val.toLocaleString() + ' EA';
     }
 
-    async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStock(); }
-    async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaterials(); }
-    async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json() || {}; db.orders = Object.entries(data).map(([id, val]) => ({...val, id})); renderOrders(); }
+    async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
+    async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
 
-    function switchPage(p) {
-        document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active'));
-        document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
-        document.getElementById('page-' + p).classList.add('active');
-        document.getElementById('nav-' + p).classList.add('active');
-        if(p === 'stock') loadStock(); else if(p === 'materials') loadMaterials(); else if(p === 'orders') loadOrders();
-    }
-
-    // 3. 디알텍 생산 및 자동 차감 실행
-    async function produceDrtech() {
-        const key = document.getElementById('dr-item-select').value;
-        const qty = Number(document.getElementById('dr-qty').value);
-        const bom = DR_BOM[key];
-        const ts = Date.now();
-        const date = new Date().toISOString().split('T')[0];
-
-        if(!confirm(`${bom.name} ${qty}개를 생산하고 자재를 차감할까요?`)) return;
-
-        bom.mats.forEach(m => {
-            const usage = m.u * qty;
-            db.material.push({
-                regDate: date, project: "디알텍 (생산)", vendor: "SKE내부", item: m.n,
-                targetQty: 0, inQty: -usage, timestamp: ts + Math.random(),
-                history: [{ date, qty: -usage, memo: `${bom.name} 생산` }]
-            });
-        });
-        await saveData('material');
-        alert("생산 차감 완료!");
+    function renderStock() {
+        const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { code: d.code||'-', name: d.item, spec: d.spec, q: 0, p: d.parent||'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const rows = Object.values(sum).filter(s => (!stFilter.p || s.p === stFilter.p));
+        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
+            const lv = getLv(s.q, s.p);
+            return `<tr><td>${s.code}</td><td>${s.p}</td><td>${s.name}</td><td>${s.spec}</td><td style="font-weight:900; color:var(--erp-accent)">${s.q.toLocaleString()}</td><td style="color:${lv.c}">● ${lv.t}</td><td><button class="del-btn" onclick="openHistory('${s.name}','${s.spec}')">이력</button></td></tr>`;
+        }).join('');
     }
 
     function renderMaterials() {
-        const search = document.getElementById('ma-search').value.toUpperCase();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map(m => {
-            if(search && !Object.values(m).join('').toUpperCase().includes(search)) return '';
             const isDr = m.project && m.project.includes('디알텍');
             const req = m.targetQty || 0;
             const recv = m.history ? m.history.reduce((s, h) => s + Number(h.qty), 0) : (Number(m.inQty) || 0);
-
-            return `<tr style="${isDr ? 'background:var(--drtech-bg)' : ''}">
-                <td>${m.regDate || m.date}</td>
-                <td>${isDr ? '<span class="dr-badge">DRTECH</span>' : ''}${m.project}</td>
-                <td>${m.vendor}</td>
-                <td style="text-align:left;">${m.item}</td>
-                <td>${formatVal(req, m.item)}</td>
-                <td style="color:${recv < 0 ? 'red' : 'blue'}; font-weight:900;">${formatVal(recv, m.item)}</td>
-                <td><span class="badge ${recv < 0 ? 'status-mi' : 'status-ok'}">${recv < 0 ? '소모됨' : '입고'}</span></td>
-                <td><button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
-            </tr>`;
+            return `<tr style="${isDr ? 'background:var(--drtech-bg)' : ''}"><td>${m.regDate||m.date}</td><td>${m.project}</td><td>${m.vendor}</td><td style="text-align:left;">${m.item}</td><td>${formatUnit(req, m.item)}</td><td style="color:${recv < 0 ? 'red' : 'blue'}">${formatUnit(recv, m.item)}</td><td><span class="badge ${recv < req ? 'status-mi' : 'status-ok'}">${recv < req ? '미달' : '완료'}</span></td><td><button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
         }).join('');
+    }
+
+    async function produceDrtech() {
+        const DR_BOM = { "F560": [{n:"INTERFACE CABLE",u:10100},{n:"HOOD (male)",u:1}], "DATA": [{n:"DATA CABLE",u:830},{n:"HOOD (female)",u:1}], "POWER": [{n:"CORE",u:2}] };
+        const key = document.getElementById('dr-item-select').value; const qty = Number(document.getElementById('dr-qty').value);
+        if(!confirm("생산 차감을 진행하시겠습니까?")) return;
+        DR_BOM[key].forEach(m => {
+            db.material.push({ regDate: new Date().toISOString().split('T')[0], project: "디알텍 (생산)", vendor: "내부소모", item: m.n, targetQty: 0, inQty: -(m.u * qty), timestamp: Date.now()+Math.random(), history: [{date: new Date().toISOString().split('T')[0], qty: -(m.u * qty), memo: "생산차감"}] });
+        });
+        await saveData('material');
     }
 
     async function addData(type) {
@@ -218,19 +196,17 @@
         if(type === 'stock') {
             db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
         } else {
-            const recv = Number(document.getElementById('ma-recv').value);
-            db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recv, timestamp: ts, history: recv !== 0 ? [{date: document.getElementById('ma-date').value, qty: recv}] : [] });
+            const r = Number(document.getElementById('ma-recv').value);
+            db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: r, timestamp: ts, history: r? [{date:document.getElementById('ma-date').value, qty:r}] : [] });
         }
         await saveData(type);
     }
 
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
     async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
-    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
+    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x => x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('nav-'+p).classList.add('active'); if(p==='stock') loadStock(); else if(p==='materials') loadMaterials(); }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-    
-    // 초기 로딩
-    document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
+
     loadStock();
 </script>
 </body>
