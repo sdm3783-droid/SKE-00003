@@ -116,10 +116,12 @@
     let db = { stock: [], material: [], orders: [] };
     let stFilter = { p: '', l: '' };
 
-    // [유틸] mm -> M 환산
-    function formatUnit(val, item) {
-        if (item && (item.includes('CABLE') || item.includes('INTERFACE'))) return (val / 1000).toFixed(2) + ' M';
-        return val.toLocaleString() + ' EA';
+    function getLv(q, p) {
+        let lim = (p==='SLEEVE')?[1000,3000,5000]:(p==='CONNECTOR'?[500,1500,3000]:[3000,5000,10000]);
+        if(q < lim[0]) return { t: '경고', c: 'var(--status-red)' };
+        if(q < lim[1]) return { t: '주의', c: 'var(--status-brown)' };
+        if(q < lim[2]) return { t: '부족', c: 'var(--status-yellow)' };
+        return { t: '양호', c: 'var(--status-green)' };
     }
 
     async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json()||{}); renderStockDash(); renderStock(); }
@@ -128,23 +130,37 @@
 
     function renderStockDash() {
         const sum = {}; db.stock.forEach(d => { const k = d.item+'|'+d.spec; if(!sum[k]) sum[k] = { q:0, p:d.parent||'CABLE' }; sum[k].q += (d.type==='출고'?-Number(d.qty):Number(d.qty)); });
-        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = {'경고':0,'주의':0,'부족':0,'양호':0}; stats[s.p][(s.q<3000?'경고':(s.q<5000?'부족':'양호'))]++; }); // 단순 예시 로직
+        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = {'경고':0,'주의':0,'부족':0,'양호':0}; stats[s.p][getLv(s.q,s.p).t]++; });
         document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `
-            <div class="dash-card">
+            <div class="dash-card" onclick="stFilter={p:'${p}',l:''}; renderStock()">
                 <span style="font-size:12px; font-weight:800; color:#64748b;">CATEGORY</span>
                 <div style="font-size:18px; font-weight:900; margin:10px 0;">${p}</div>
+                <div class="st-grid">
+                    <button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'경고'}; renderStock()">경고 <span>${stats[p]['경고']}</span></button>
+                    <button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'주의'}; renderStock()">주의 <span>${stats[p]['주의']}</span></button>
+                    <button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'부족'}; renderStock()">부족 <span>${stats[p]['부족']}</span></button>
+                    <button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); stFilter={p:'${p}',l:'양호'}; renderStock()">양호 <span>${stats[p]['양호']}</span></button>
+                </div>
             </div>`).join('');
     }
 
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
         const sum = {}; db.stock.forEach(d => { const k = d.item+'|'+d.spec; if(!sum[k]) sum[k] = { code:d.code||'-', name:d.item, spec:d.spec, q:0, p:d.parent||'CABLE' }; sum[k].q += (d.type==='출고'?-Number(d.qty):Number(d.qty)); });
-        const rows = Object.values(sum).filter(s => (search === '' || (s.code+s.name+s.spec).toUpperCase().includes(search)));
-        document.getElementById('stock-table-body').innerHTML = rows.map(s => `
-            <tr><td><input type="checkbox"></td><td>${s.code}</td><td>${s.p}</td>
+        const rows = Object.values(sum).filter(s => {
+            const lv = getLv(s.q, s.p);
+            if(stFilter.p && s.p !== stFilter.p) return false;
+            if(stFilter.l && lv.t !== stFilter.l) return false;
+            if(search && !(s.code+s.name+s.spec).toUpperCase().includes(search)) return false;
+            return true;
+        });
+        document.getElementById('stock-table-body').innerHTML = rows.map(s => {
+            const lv = getLv(s.q, s.p);
+            return `<tr><td><input type="checkbox"></td><td>${s.code}</td><td><span class="badge" style="background:#f1f5f9">${s.p}</span></td>
             <td><span class="editable" onclick="openHistory('${s.name}','${s.spec}')">${s.name}</span></td><td>${s.spec}</td>
             <td style="font-weight:900; color:var(--erp-accent); cursor:pointer;" onclick="openHistory('${s.name}','${s.spec}')">${s.q.toLocaleString()}</td>
-            <td>양호</td><td>-</td></tr>`).join('');
+            <td style="color:${lv.c}">● ${lv.t}</td><td><button class="del-btn" onclick="openHistory('${s.name}','${s.spec}')">이력</button></td></tr>`;
+        }).join('');
     }
 
     function renderMaDash() {
@@ -162,11 +178,22 @@
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const stats = vMap[v];
             const per = Math.round((stats.ok/stats.total)*100)||0;
-            let color = stats.hasDelay ? "var(--status-red)" : (per === 100 ? "var(--status-green)" : "var(--status-yellow)");
-            return `<div class="dash-card" style="border-left-color:${color}" onclick="document.getElementById('ma-search').value='${v}'; renderMaterials()">
-                <div style="font-size:18px; font-weight:900;">${v}</div><div style="font-size:22px; color:${color}">${per}%</div>
-            </div>`;
+            let cardColor = stats.hasDelay ? "var(--status-red)" : (per === 100 ? "var(--status-green)" : (per > 0 ? "var(--status-yellow)" : "var(--erp-accent)"));
+            return `
+                <div class="dash-card" style="border-left-color: ${cardColor}" onclick="document.getElementById('ma-search').value='${v}'; renderMaterials()">
+                    <span style="font-size:12px; font-weight:800; color:#64748b;">VENDOR</span>
+                    <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
+                    <div style="font-size:22px; font-weight:900; color: ${cardColor}">${per}%</div>
+                    <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;">
+                        <div style="width:${per}%; height:100%; background: ${cardColor};"></div>
+                    </div>
+                </div>`;
         }).join('');
+    }
+
+    function formatUnit(val, item) {
+        if (item && (item.includes('CABLE') || item.includes('INTERFACE'))) return (val / 1000).toFixed(2) + ' M';
+        return val.toLocaleString() + ' EA';
     }
 
     function renderMaterials() {
@@ -184,10 +211,12 @@
                 <td><span class="editable" onclick="editData('material',${idx},'regDate')">${m.regDate||m.date}</span></td>
                 <td><span class="editable" onclick="editData('material',${idx},'project')">${m.project}</span></td>
                 <td><span class="editable" onclick="editData('material',${idx},'vendor')">${m.vendor}</span></td>
-                <td style="text-align:left;"><div style="display:flex; align-items:center; justify-content:space-between;">
-                    <span class="editable" onclick="editData('material',${idx},'item')">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span>
-                    <button class="hist-btn" onclick="openMaHistory(${idx})">이력</button>
-                </div></td>
+                <td style="text-align:left;">
+                    <div style="display:flex; align-items:center; justify-content:space-between; width:100%;">
+                        <span class="editable" style="flex:1;" onclick="editData('material',${idx},'item')">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span>
+                        <button class="hist-btn" onclick="openMaHistory(${idx})">이력</button>
+                    </div>
+                </td>
                 <td><span class="editable" onclick="editData('material',${idx},'targetQty')">${isDr ? formatUnit(req, m.item) : req}</span></td>
                 <td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${idx})">${isDr ? formatUnit(recv, m.item) : recv}</td>
                 <td>${badge}</td>
@@ -195,46 +224,26 @@
         }).join('');
     }
 
-    // [수정] 사급자재 이력 모달 및 삭제 버튼 기능
-    function openMaHistory(idx) {
-        const item = db.material[idx];
-        const h = item.history || [];
-        document.getElementById('modalTitle').innerText = `📋 ${item.item} 입고 이력`;
-        document.getElementById('history-content').innerHTML = `
-            <table>
-                <thead><tr><th>날짜</th><th>수량</th><th>삭제</th></tr></thead>
-                <tbody>
-                    ${h.map((x, hIdx) => `
-                        <tr>
-                            <td>${x.date}</td>
-                            <td>${x.qty.toLocaleString()}</td>
-                            <td><button class="del-btn" onclick="deleteMaHistory(${idx}, ${hIdx})">삭제</button></td>
-                        </tr>`).join('')}
-                </tbody>
-            </table>`;
-        document.getElementById('historyModal').style.display = 'block';
-    }
-
-    // [추가] 사급자재 개별 이력 삭제 로직
-    async function deleteMaHistory(mIdx, hIdx) {
-        if(!confirm("해당 이력을 삭제하시겠습니까?")) return;
-        db.material[mIdx].history.splice(hIdx, 1);
-        // 입고 합계(inQty) 재계산 (기존 필드가 있는 경우)
-        db.material[mIdx].inQty = db.material[mIdx].history.reduce((s, h) => s + Number(h.qty), 0);
+    async function produceDrtech() {
+        const BOM = { "F560":[{n:"INTERFACE CABLE",u:10100},{n:"HOOD (male)",u:1}], "DATA":[{n:"DATA CABLE",u:830},{n:"HOOD (female)",u:1}], "POWER":[{n:"CORE",u:2}] };
+        const key = document.getElementById('dr-item-select').value; const qty = Number(document.getElementById('dr-qty').value);
+        if(!confirm("생산 및 자재 차감을 진행할까요?")) return;
+        BOM[key].forEach(m => {
+            db.material.push({ regDate: new Date().toISOString().split('T')[0], project: "디알텍 (생산)", vendor: "SKE내부", item: m.n, targetQty: 0, inQty: -(m.u*qty), timestamp: Date.now()+Math.random(), history: [{date: new Date().toISOString().split('T')[0], qty: -(m.u*qty), memo: "생산"}] });
+        });
         await saveData('material');
-        openMaHistory(mIdx); // 모달 내용 갱신
     }
 
     async function editData(type, idx, f) {
-        let v = prompt("수정할 값을 입력하세요:", db[type][idx][f]);
+        let v = prompt("값 수정:", db[type][idx][f]);
         if(v !== null) {
-            db[type][idx][f] = (f==='targetQty') ? Number(v) : v;
+            db[type][idx][f] = (f === 'targetQty') ? Number(v) : v;
             await saveData(type);
         }
     }
 
     async function editMaInQty(idx) {
-        let v = prompt("추가 입고량을 입력하세요(음수는 소모):", "0");
+        let v = prompt("수량 추가(음수=소모):", "0");
         if(v && !isNaN(v)) {
             if(!db.material[idx].history) db.material[idx].history = [];
             db.material[idx].history.push({ date: new Date().toISOString().split('T')[0], qty: Number(v) });
@@ -244,30 +253,44 @@
 
     async function addData(t) {
         const ts = Date.now();
-        if(t==='stock') {
-            db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts });
-        } else {
-            const r = Number(document.getElementById('ma-recv').value);
-            db.material.push({ regDate: document.getElementById('ma-date').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: r, timestamp: ts, history: r ? [{date:document.getElementById('ma-date').value, qty:r}] : [] });
-        }
+        if(t==='stock') { db.stock.push({date:document.getElementById('st-date').value, code:document.getElementById('st-code').value, parent:document.getElementById('st-parent').value, item:document.getElementById('st-item').value, spec:document.getElementById('st-spec').value, type:document.getElementById('st-type').value, qty:Number(document.getElementById('st-qty').value), timestamp:ts}); }
+        else { const r = Number(document.getElementById('ma-recv').value); db.material.push({regDate:document.getElementById('ma-date').value, project:document.getElementById('ma-project').value, vendor:document.getElementById('ma-vendor').value, item:document.getElementById('ma-item').value, targetQty:Number(document.getElementById('ma-req').value), inQty:r, timestamp:ts, history: r?[{date:document.getElementById('ma-date').value, qty:r}]:[]}); }
         await saveData(t);
     }
 
-    async function produceDrtech() {
-        const BOM = { "F560":[{n:"INTERFACE CABLE",u:10100},{n:"HOOD (male)",u:1}], "DATA":[{n:"DATA CABLE",u:830},{n:"HOOD (female)",u:1}], "POWER":[{n:"CORE",u:2}] };
-        const key = document.getElementById('dr-item-select').value; const qty = Number(document.getElementById('dr-qty').value);
-        if(!confirm("생산 차감을 진행하시겠습니까?")) return;
-        BOM[key].forEach(m => {
-            db.material.push({ regDate: new Date().toISOString().split('T')[0], project: "디알텍 (생산)", vendor: "SKE내부", item: m.n, targetQty: 0, inQty: -(m.u*qty), timestamp: Date.now()+Math.random(), history: [{date: new Date().toISOString().split('T')[0], qty: -(m.u*qty), memo: "생산"}] });
-        });
-        await saveData('material');
+    async function saveData(t) { await fetch(t==='stock'?STOCK_URL:MATERIAL_URL,{method:'PUT',body:JSON.stringify(db[t])}); t==='stock'?loadStock():loadMaterials(); }
+    async function deleteData(t,ts) { if(confirm("삭제?")) { db[t]=db[t].filter(d=>d.timestamp!==ts); await saveData(t); } }
+    
+    function openMaHistory(idx) { 
+        const m = db.material[idx]; 
+        const h = m.history || []; 
+        document.getElementById('modalTitle').innerText = m.item + ' 입고 이력'; 
+        document.getElementById('history-content').innerHTML = `
+            <table>
+                <thead><tr><th>날짜</th><th>수량</th><th width="60">삭제</th></tr></thead>
+                <tbody>
+                    ${h.map((x, hIdx) => `
+                        <tr>
+                            <td>${x.date}</td>
+                            <td>${x.qty.toLocaleString()}</td>
+                            <td><button class="del-btn" onclick="deleteHistoryItem(${idx}, ${hIdx})">삭제</button></td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>`; 
+        document.getElementById('historyModal').style.display = 'block'; 
     }
 
-    async function saveData(t) { await fetch(t==='stock'?STOCK_URL:MATERIAL_URL, {method:'PUT', body:JSON.stringify(db[t])}); t==='stock'?loadStock():loadMaterials(); }
-    async function deleteData(t,ts) { if(confirm("삭제?")) { db[t]=db[t].filter(d=>d.timestamp!==ts); await saveData(t); } }
-    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('nav-'+p).classList.add('active'); if(p==='stock') loadStock(); else if(p==='materials') loadMaterials(); }
-    function openHistory(n,s) { document.getElementById('modalTitle').innerText = n+' 이력'; document.getElementById('historyModal').style.display='block'; }
+    async function deleteHistoryItem(mIdx, hIdx) {
+        if(!confirm("이 항목을 삭제하시겠습니까?")) return;
+        db.material[mIdx].history.splice(hIdx, 1);
+        await saveData('material');
+        openMaHistory(mIdx); // 삭제 후 모달 갱신
+    }
+
+    function openHistory(n,s) { const h = db.stock.filter(d=>d.item===n&&d.spec===s); document.getElementById('modalTitle').innerText = n+' 이력'; document.getElementById('history-content').innerHTML = '<table>' + h.map(x=>`<tr><td>${x.date}</td><td>${x.type}</td><td>${x.qty}</td></tr>`).join('') + '</table>'; document.getElementById('historyModal').style.display='block'; }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
+    function switchPage(p) { document.querySelectorAll('.page-content').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.nav-btn').forEach(x=>x.classList.remove('active')); document.getElementById('page-'+p).classList.add('active'); document.getElementById('nav-'+p).classList.add('active'); if(p==='stock') loadStock(); else if(p==='materials') loadMaterials(); }
+
     loadStock();
 </script>
 </body>
