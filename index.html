@@ -217,7 +217,24 @@
 
     function sendGmailTable(v, listJson) { event.stopPropagation(); const recipient = VENDOR_CONTACTS[v] || ""; const list = typeof listJson === 'string' ? JSON.parse(listJson) : listJson; let t = "---------------------------------\n| 프로젝트 | 품목명 | 필요량 | 입고량 |\n---------------------------------\n"; list.forEach(r => t += "| " + r.project + " | " + r.item + " | " + r.req + " | " + r.recv + " |\n"); const sub = encodeURIComponent("[SKE ERP] " + v + " 납기 지연 독촉"); const body = encodeURIComponent("안녕하십니까. SKE 관리팀입니다.\n지연된 품목들의 빠른 입고를 요청드립니다.\n\n" + t); window.open("https://mail.google.com/mail/?view=cm&fs=1&to=" + recipient + "&su=" + sub + "&body=" + body, '_blank'); }
     async function editData(type, idx, field) { let currentVal = db[type][idx][field]; const val = prompt("수정할 값을 입력하세요:", currentVal); if(val !== null) { db[type][idx][field] = (field === 'targetQty') ? Number(val) : val; await saveData(type); } }
-    async function editMaInQty(idx) { const val = prompt("추가할 입고 수량을 입력하세요:", "0"); if(val !== null && val !== "" && !isNaN(val)) { const addQty = Number(val); const memo = prompt("메모를 입력하세요:", "추가 입고"); if(!db.material[idx].history) db.material[idx].history = []; db.material[idx].history.push({ date: new Date().toISOString().split('T')[0], qty: addQty, memo: memo || "추가 입고", ts: Date.now() }); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); } }
+    
+    async function editMaInQty(idx) { 
+        const val = prompt("추가할 입고 수량을 입력하세요:", "0"); 
+        if(val !== null && val !== "" && !isNaN(val)) { 
+            const addQty = Number(val); 
+            const memo = prompt("입고 메모를 입력하세요 (예: 박스파손, 부분입고 등):", "추가 입고"); 
+            if(!db.material[idx].history) db.material[idx].history = []; 
+            db.material[idx].history.push({ 
+                date: new Date().toISOString().split('T')[0], 
+                qty: addQty, 
+                memo: memo || "추가 입고", 
+                ts: Date.now() 
+            }); 
+            db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); 
+            await saveData('material'); 
+        } 
+    }
+
     async function deleteStockHistory(ts) { if(confirm("삭제하시겠습니까?")) { db.stock = db.stock.filter(d => d.timestamp !== ts); await saveData('stock'); closeModal(); } }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
 
@@ -293,8 +310,39 @@
     function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
     function renderStockDash() { const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); }); const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; }); document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join(''); }
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
-    function openMaHistory(idx) { const item = db.material[idx]; const h = item.history || []; document.getElementById('modalTitle').innerText = '📋 ' + item.item + ' 입고 이력'; document.getElementById('history-content').innerHTML = '<table><thead><tr><th>일자</th><th>수량</th><th>삭제</th></tr></thead><tbody>' + h.map((x, i) => `<tr><td>${x.date}</td><td>${x.qty}</td><td><button class="del-btn" onclick="deleteMaHistory(${idx}, ${i})">삭제</button></td></tr>`).join('') + '</tbody></table>'; document.getElementById('historyModal').style.display = 'block'; }
+
+    // --- 사급자재 이력 및 메모 관리 기능 ---
+    function openMaHistory(idx) { 
+        const item = db.material[idx]; 
+        const h = item.history || []; 
+        document.getElementById('modalTitle').innerText = '📋 ' + item.item + ' 입고 이력'; 
+        
+        let html = '<table><thead><tr><th>일자</th><th>수량</th><th>메모 (클릭수정)</th><th>삭제</th></tr></thead><tbody>';
+        html += h.map((x, i) => `
+            <tr>
+                <td>${x.date}</td>
+                <td>${x.qty.toLocaleString()}</td>
+                <td><span class="editable" onclick="editMaHistoryMemo(${idx}, ${i})">${x.memo || '-'}</span></td>
+                <td><button class="del-btn" onclick="deleteMaHistory(${idx}, ${i})">삭제</button></td>
+            </tr>`).join('');
+        html += '</tbody></table>';
+        
+        document.getElementById('history-content').innerHTML = html; 
+        document.getElementById('historyModal').style.display = 'block'; 
+    }
+
+    async function editMaHistoryMemo(mIdx, hIdx) {
+        const currentMemo = db.material[mIdx].history[hIdx].memo || "";
+        const newMemo = prompt("수정할 메모 내용을 입력하세요:", currentMemo);
+        if (newMemo !== null) {
+            db.material[mIdx].history[hIdx].memo = newMemo;
+            await saveData('material');
+            openMaHistory(mIdx); // 팝업 내용 새로고침
+        }
+    }
+
     async function deleteMaHistory(idx, hIdx) { if(confirm("삭제?")) { db.material[idx].history.splice(hIdx, 1); db.material[idx].inQty = db.material[idx].history.reduce((sum, h) => sum + Number(h.qty), 0); await saveData('material'); openMaHistory(idx); } }
+    
     function openBulkOrderModal() { const checked = Array.from(document.querySelectorAll('.st-chk:checked')); if(checked.length === 0) return alert("품목을 선택하세요."); document.getElementById('bulk-order-list').innerHTML = checked.map(c => `<tr><td>${c.dataset.item}</td><td>${c.dataset.spec}</td><td><input type="number" class="blk-qty" value="0"></td><td><input type="number" class="blk-price" value="0" step="0.01"></td><td onclick="this.parentElement.remove()" style="color:red; cursor:pointer;">&times;</td></tr>`).join(''); document.getElementById('bulkOrderModal').style.display = 'block'; }
 
     document.querySelectorAll('input[type="date"]').forEach(i => i.value = new Date().toISOString().split('T')[0]);
