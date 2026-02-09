@@ -39,6 +39,7 @@
         .gmail-btn { position: absolute; top: 15px; right: 15px; background: #ea4335; color: white; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 900; cursor: pointer; }
         .del-btn { color: #ef4444; border: 1px solid #fee2e2; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
         .copy-btn { color: var(--erp-accent); border: 1px solid #e0f2fe; background: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; }
+        .hist-btn { color: #6366f1; border: 1px solid #e0e7ff; background: #f5f3ff; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 11px; font-weight: 800; margin-left: 5px; }
         .erp-modal { display: none; position: fixed; z-index: 3000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
         .modal-body { background: white; margin: 5% auto; padding: 30px; border-radius: 16px; width: 85%; max-width: 900px; max-height: 85vh; overflow-y: auto; }
         .blk-table { width: 100%; margin-top: 15px; border-collapse: collapse; }
@@ -111,7 +112,7 @@
             <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 사급자재 현황 검색...">
         </div>
         <table>
-            <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th>품명 (이력/메모)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
+            <thead><tr><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th>품명 (수정/이력)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
@@ -147,19 +148,12 @@
     async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
     async function loadOrders() { const res = await fetch(ORDER_URL); const data = await res.json() || {}; db.orders = Object.entries(data).map(([id, val]) => ({...val, id})); renderOrders(); }
 
-    // 카테고리별 재고 임계치 설정 함수 (여기에서 카테고리 기준 수량 수정 가능)
     function getLv(q, p) {
         let limit;
-        if(p === 'SLEEVE') {
-            limit = [1000, 3000, 5000];
-        } else if(p === 'CONNECTOR') {
-            limit = [500, 1500, 3000]; // 예시 수량
-        } else if(p === 'TUBE') {
-            limit = [200, 500, 1000]; // 예시 수량
-        } else {
-            limit = [3000, 5000, 10000]; // 기본값 (CABLE 등)
-        }
-        
+        if(p === 'SLEEVE') { limit = [1000, 3000, 5000]; } 
+        else if(p === 'CONNECTOR') { limit = [500, 1500, 3000]; } 
+        else if(p === 'TUBE') { limit = [200, 500, 1000]; } 
+        else { limit = [3000, 5000, 10000]; }
         if(q < limit[0]) return { t: '경고', c: 'var(--status-red)' };
         if(q < limit[1]) return { t: '주의', c: 'var(--status-brown)' };
         if(q < limit[2]) return { t: '부족', c: 'var(--status-yellow)' };
@@ -203,7 +197,6 @@
         const date = document.getElementById('blk-date').value;
         const rows = document.querySelectorAll('#bulk-order-list tr');
         let items = []; let trs = ''; let grandTotal = 0;
-
         rows.forEach((r, i) => {
             const name = r.cells[0].innerText; const spec = r.cells[1].innerText;
             const qty = Number(r.querySelector('.blk-qty').value) || 0;
@@ -212,11 +205,8 @@
             items.push({ name, spec, qty, price, amount });
             trs += `<tr><td>${i+1}</td><td style="text-align:left;">${name} / ${spec}</td><td>${qty.toLocaleString()}</td><td>${price.toFixed(2)}</td><td>${amount.toLocaleString(undefined, {minimumFractionDigits: 2})}</td><td>ASAP</td></tr>`;
         });
-
         if(items.length === 0) return alert("품목이 없습니다.");
-
         await fetch(ORDER_URL, { method: 'POST', body: JSON.stringify({ timestamp: Date.now(), date, vendor, items, totalAmount: grandTotal }) });
-
         const win = window.open('', '_blank');
         win.document.write('<html><head><style>body{font-family:Arial;padding:40px}.h-box{text-align:center;border-bottom:2px solid #000;margin-bottom:30px}table{width:100%;border-collapse:collapse}th,td{border:1px solid #000;padding:10px;text-align:center;font-size:13px}th{background:#f2f2f2}.t-row{background:#fafafa;font-weight:bold}</style></head><body>' +
             '<div class="h-box"><h1>PURCHASE ORDER</h1></div><p><b>FROM:</b> SHIN KWANG Electronics Co., Ltd. / <b>TO:</b> ' + vendor + ' / <b>DATE:</b> ' + date + '</p>' +
@@ -238,7 +228,22 @@
             const req = m.targetQty || 0; const recv = m.history && m.history.length > 0 ? m.history.reduce((sum, h) => sum + Number(h.qty), 0) : (Number(m.inQty) || 0);
             const isDelay = (recv < req) && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7;
             let badge = recv === 0 ? '<span class="badge status-mi">미입고</span>' : (recv < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
-            return `<tr><td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td><td style="text-align:left;"><span class="editable" onclick="openMaHistory(${rIdx})">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}${m.item}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'receiver')">${m.receiver || '-'}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td><td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${recv.toLocaleString()}</td><td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
+            return `<tr>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${m.regDate || m.date}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td>
+                <td style="text-align:left; display:flex; align-items:center; justify-content:center; gap:5px;">
+                    ${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}
+                    <span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span>
+                    <button class="hist-btn" onclick="openMaHistory(${rIdx})">이력</button>
+                </td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'receiver')">${m.receiver || '-'}</span></td>
+                <td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>
+                <td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${recv.toLocaleString()}</td>
+                <td>${badge}</td>
+                <td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td>
+            </tr>`;
         }).join('');
     }
 
@@ -293,4 +298,3 @@
 </script>
 </body>
 </html>
-
