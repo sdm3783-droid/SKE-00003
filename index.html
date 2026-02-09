@@ -167,21 +167,40 @@
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total:0, ok:0, delayed:[] };
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total:0, ok:0, hasDelay: false };
             const req = m.targetQty||0;
             const recv = m.history ? m.history.reduce((s,h)=>s+Number(h.qty),0) : (Number(m.inQty)||0);
-            if(recv >= req && req > 0) vMap[m.vendor].ok++;
-            if(recv < req && (today - new Date(m.regDate||m.date))/(1000*60*60*24) >= 7) vMap[m.vendor].delayed.push(m);
+            
+            // 입고 완료 체크
+            if(req > 0 && recv >= req) vMap[m.vendor].ok++;
+            
+            // 지연 여부 체크 (7일 경과 & 미입고)
+            const regDate = new Date(m.regDate || m.date);
+            if(recv < req && (today - regDate)/(1000*60*60*24) >= 7) {
+                vMap[m.vendor].hasDelay = true;
+            }
             vMap[m.vendor].total++;
         });
+
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
-            const per = Math.round((vMap[v].ok/vMap[v].total)*100)||0;
-            return `<div class="dash-card" onclick="document.getElementById('ma-search').value='${v}'; renderMaterials()">
-                <span style="font-size:12px; font-weight:800; color:#64748b;">VENDOR</span>
-                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
-                <div style="font-size:22px; font-weight:900; color:var(--erp-accent)">${per}%</div>
-                <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:var(--erp-accent);"></div></div>
-            </div>`;
+            const stats = vMap[v];
+            const per = Math.round((stats.ok/stats.total)*100)||0;
+            
+            // 조건별 색상 결정
+            let cardColor = "var(--erp-accent)"; // 기본 파랑
+            if (stats.hasDelay) cardColor = "var(--status-red)"; // 지연 시 빨강
+            else if (per === 100) cardColor = "var(--status-green)"; // 완료 시 초록
+            else if (per > 0) cardColor = "var(--status-yellow)"; // 진행 시 노랑
+
+            return `
+                <div class="dash-card" style="border-left-color: ${cardColor}" onclick="document.getElementById('ma-search').value='${v}'; renderMaterials()">
+                    <span style="font-size:12px; font-weight:800; color:#64748b;">VENDOR</span>
+                    <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
+                    <div style="font-size:22px; font-weight:900; color: ${cardColor}">${per}%</div>
+                    <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;">
+                        <div style="width:${per}%; height:100%; background: ${cardColor};"></div>
+                    </div>
+                </div>`;
         }).join('');
     }
 
