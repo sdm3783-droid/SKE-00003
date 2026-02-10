@@ -67,10 +67,8 @@
             <div class="input-grid">
                 <input type="date" id="st-date"><input type="text" id="st-code" placeholder="품목코드">
                 <select id="st-parent">
-                    <option value="CABLE">CABLE</option>
-                    <option value="SLEEVE">SLEEVE</option>
-                    <option value="CONNECTOR">CONNECTOR</option>
-                    <option value="TUBE">TUBE</option>
+                    <option value="CABLE">CABLE</option><option value="SLEEVE">SLEEVE</option>
+                    <option value="CONNECTOR">CONNECTOR</option><option value="TUBE">TUBE</option>
                 </select>
                 <input type="text" id="st-item" placeholder="품목명"><input type="text" id="st-spec" placeholder="규격">
                 <select id="st-type"><option value="입고">입고</option><option value="출고">출고</option></select>
@@ -117,14 +115,14 @@
             </div>
         </div>
         <div class="filter-group">
-            <select id="ma-month-filter" class="month-filter" onchange="renderMaterials()">
+            <select id="ma-month-filter" class="month-filter" onchange="maFilter={v:'',s:''}; renderMaterials()">
                 <option value="">📅 전체 기간 (2026~)</option>
                 <option value="2026-01">2026년 01월</option><option value="2026-02">2026년 02월</option><option value="2026-03">2026년 03월</option>
                 <option value="2026-04">2026년 04월</option><option value="2026-05">2026년 05월</option><option value="2026-06">2026년 06월</option>
                 <option value="2026-07">2026년 07월</option><option value="2026-08">2026년 08월</option><option value="2026-09">2026년 09월</option>
                 <option value="2026-10">2026년 10월</option><option value="2026-11">2026년 11월</option><option value="2026-12">2026년 12월</option>
             </select>
-            <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 프로젝트, 업체명, 자재명 검색...">
+            <input type="text" id="ma-search" oninput="maFilter={v:'',s:''}; renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 프로젝트, 업체명, 자재명 검색...">
         </div>
         <table>
             <thead><tr id="ma-header-row"><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th width="300">품명 (수정/이력)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
@@ -143,7 +141,8 @@
     const VENDOR_CONTACTS = { "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co" };
 
     let db = { stock: [], material: [], orders: [] };
-    let stFilter = { p: '', l: '' }; // 카테고리, 레벨(상태) 필터
+    let stFilter = { p: '', l: '' }; 
+    let maFilter = { v: '', s: '' }; // v: 업체필터, s: 상태필터(미입고, 부분입고, 입고완료)
 
     async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
     async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
@@ -166,9 +165,7 @@
         document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
         document.getElementById('page-' + p).classList.add('active');
         document.getElementById('nav-' + p).classList.add('active');
-        if(p === 'stock') loadStock();
-        else if(p === 'materials') loadMaterials();
-        else if(p === 'orders') loadOrders();
+        if(p === 'stock') loadStock(); else if(p === 'materials') loadMaterials(); else if(p === 'orders') loadOrders();
     }
 
     function renderOrders() {
@@ -240,15 +237,25 @@
 
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
 
+    // --- 사급 자재 현황 필터링 로직 (수정됨) ---
     function renderMaterials() {
         const search = document.getElementById('ma-search').value.toUpperCase();
         const monthFilter = document.getElementById('ma-month-filter').value;
         const today = new Date();
+        
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
             const rIdx = db.material.indexOf(m); const mDate = m.regDate || m.date;
+            
+            // 1. 월별 필터
             if(monthFilter && !mDate.startsWith(monthFilter)) return '';
+            
+            // 2. 통합 검색 필터
             const searchBase = (m.orderNo || '') + m.vendor + m.project + m.item;
             if(search && !searchBase.toUpperCase().includes(search)) return '';
+            
+            // 3. 업체별 필터 (현황판 클릭)
+            if(maFilter.v && m.vendor !== maFilter.v) return '';
+
             const isGoyoung = m.vendor.includes("고영테크놀러지");
             const req = m.targetQty || 0; const h = m.history || [];
             let totalIn = 0, totalOut = 0, currentRemain = 0;
@@ -257,56 +264,72 @@
                 totalOut = h.filter(x => x.type === "출하").reduce((s, x) => s + Number(x.qty), 0);
                 currentRemain = totalIn - totalOut;
             } else { totalIn = h.length > 0 ? h.reduce((sum, x) => sum + Number(x.qty), 0) : (Number(m.inQty) || 0); }
+            
+            // 4. 상태별 필터 (현황판 버튼 클릭)
+            let statusText = totalIn === 0 ? '미입고' : (totalIn < req ? '부분입고' : '입고완료');
+            if(maFilter.s && statusText !== maFilter.s) return '';
+
             const isDelay = (totalIn < req) && (today - new Date(mDate)) / (1000 * 60 * 60 * 24) >= 7;
             let badge = totalIn === 0 ? '<span class="badge status-mi">미입고</span>' : (totalIn < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
             let qtyDisplay = isGoyoung ? `<td style="padding:0;"><div style="display:flex; flex-direction:column; font-size:11px; gap:2px; padding:5px; cursor:pointer;" onclick="editMaInQty(${rIdx})"><div style="color:#10b981">입고: ${totalIn.toLocaleString()}</div><div style="color:#ef4444">출하: ${totalOut.toLocaleString()}</div><div style="color:var(--erp-accent); font-weight:900; border-top:1px solid #eee; margin-top:2px;">잔여: ${currentRemain.toLocaleString()}</div></div></td>` : `<td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${totalIn.toLocaleString()}</td>`;
+            
             return `<tr><td><span class="editable" onclick="editData('material', ${rIdx}, 'regDate')">${mDate}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'orderNo')">${m.orderNo || '-'}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'project')">${m.project}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'vendor')">${m.vendor}</span></td><td style="text-align:left;"><div style="display:flex; align-items:center; justify-content:space-between; padding: 0 10px; min-height:30px;"><div style="display:flex; align-items:center; gap:5px;">${isDelay?'<span class="delay-tag">⚠️ 지연</span>':''}<span class="editable" onclick="editData('material', ${rIdx}, 'item')">${m.item}</span></div><button class="hist-btn" onclick="openMaHistory(${rIdx})" style="flex-shrink:0;">이력</button></div></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'receiver')">${m.receiver || '-'}</span></td><td><span class="editable" onclick="editData('material', ${rIdx}, 'targetQty')">${req}</span></td>${qtyDisplay}<td>${badge}</td><td><button class="copy-btn" onclick="copyRow('material',null,null,null,null,${rIdx})">복사</button> <button class="del-btn" onclick="deleteData('material', ${m.timestamp})">삭제</button></td></tr>`;
         }).join('');
     }
 
+    // --- 사급 자재 현황판 렌더링 (상태 필터링 버튼 추가) ---
     function renderMaDash() {
         const vMap = {}; const today = new Date();
         db.material.forEach(m => {
-            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, ok: 0, delayed: [] };
+            if(!vMap[m.vendor]) vMap[m.vendor] = { total: 0, mi: 0, part: 0, ok: 0, delayed: [] };
             const req = m.targetQty || 0; const h = m.history || []; const isGoyoung = m.vendor.includes("고영테크놀러지");
             const totalIn = isGoyoung ? h.filter(x => x.type !== "출하").reduce((s, x) => s + Number(x.qty), 0) : (h.length > 0 ? h.reduce((sum, x) => sum + Number(x.qty), 0) : (Number(m.inQty) || 0));
-            const isOk = totalIn >= req; vMap[m.vendor].total++; if(isOk) vMap[m.vendor].ok++;
-            if(!isOk && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv: totalIn });
+            
+            vMap[m.vendor].total++;
+            if(totalIn === 0) vMap[m.vendor].mi++;
+            else if(totalIn < req) vMap[m.vendor].part++;
+            else vMap[m.vendor].ok++;
+
+            if(totalIn < req && (today - new Date(m.regDate || m.date)) / (1000 * 60 * 60 * 24) >= 7) vMap[m.vendor].delayed.push({ project: m.project, item: m.item, req, recv: totalIn });
         });
+
         document.getElementById('ma-dash').innerHTML = Object.keys(vMap).sort().map(v => {
             const per = Math.round((vMap[v].ok / vMap[v].total) * 100) || 0; const dCount = vMap[v].delayed.length; const color = per === 100 ? '#10b981' : (dCount > 0 ? '#ef4444' : '#eab308');
-            return `<div class="dash-card" style="border-left-color:${color}" onclick="applyMaFilter('${v}')"><span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>${dCount > 0 ? `<button class="gmail-btn" onclick='sendGmailTable("${v}", ${JSON.stringify(vMap[v].delayed)})'>Gmail 독촉</button>` : ''}<div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div><div style="font-size:22px; font-weight:900; color:${color}">${per} %</div><div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:10px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div></div>`;
+            return `<div class="dash-card" style="border-left-color:${color}" onclick="setMaFilter('${v}', '')">
+                <span style="font-size:12px; color:#64748b; font-weight:800;">VENDOR</span>
+                ${dCount > 0 ? `<button class="gmail-btn" onclick='sendGmailTable("${v}", ${JSON.stringify(vMap[v].delayed)})'>Gmail 독촉</button>` : ''}
+                <div style="font-size:18px; font-weight:900; margin:10px 0;">${v}</div>
+                <div class="st-grid">
+                    <button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setMaFilter('${v}','미입고')">미입고 <span>${vMap[v].mi}</span></button>
+                    <button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setMaFilter('${v}','부분입고')">부분 <span>${vMap[v].part}</span></button>
+                    <button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setMaFilter('${v}','입고완료')">완료 <span>${vMap[v].ok}</span></button>
+                    <button class="st-btn" style="background:#64748b" onclick="event.stopPropagation(); setMaFilter('${v}','')">전체 <span>${vMap[v].total}</span></button>
+                </div>
+                <div style="width:100%; height:6px; background:#f1f5f9; border-radius:10px; margin-top:15px; overflow:hidden;"><div style="width:${per}%; height:100%; background:${color};"></div></div>
+            </div>`;
         }).join('');
     }
 
-    // --- 통합 재고 관리 렌더링 (필터 로직 수정 완료) ---
+    function setMaFilter(v, s) { maFilter = { v, s }; renderMaterials(); }
+
+    // --- 통합 재고 관리 렌더링 ---
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
         const monthFilter = document.getElementById('st-month-filter').value;
         const sum = {}; let totalQty = 0;
-
-        // 1. 먼저 데이터를 가공하여 재고 수량을 계산
         db.stock.forEach(d => {
-            // 월별 필터가 있을 때만 날짜 체크
             if(monthFilter && !d.date.startsWith(monthFilter)) return;
-            
             const k = d.item + '|' + d.spec;
             if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' };
             sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
         });
-
-        // 2. 가공된 재고 수량 리스트(sum)를 돌면서 화면 필터링 적용
         const rows = Object.values(sum).filter(s => {
             const lv = getLv(s.q, s.p);
-            // 현황판에서 클릭한 카테고리 필터링
             if(stFilter.p && s.p !== stFilter.p) return false;
-            // 현황판에서 클릭한 상태 버튼(경고/부족 등) 필터링
             if(stFilter.l && lv.t !== stFilter.l) return false;
-            // 검색어 필터링
             if(search && !(s.code + s.name + s.spec).toUpperCase().includes(search)) return false;
             return true;
         });
-
         rows.forEach(r => totalQty += r.q);
         document.getElementById('stock-table-body').innerHTML = rows.map(s => {
             const lv = getLv(s.q, s.p);
@@ -314,6 +337,14 @@
         }).join('');
         if(rows.length > 0) document.getElementById('stock-table-body').innerHTML += `<tr class="total-row"><td colspan="5" style="text-align:right;">합계</td><td>${totalQty.toLocaleString()}</td><td colspan="2"></td></tr>`;
     }
+
+    function renderStockDash() {
+        const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
+        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join('');
+    }
+    
+    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
 
     function openHistory(n, s) { 
         const h = db.stock.filter(d => d.item === n && d.spec === s).sort((a,b)=>b.timestamp-a.timestamp); 
@@ -328,17 +359,8 @@
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
     function closeBulkOrderModal() { document.getElementById('bulkOrderModal').style.display = 'none'; }
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
-    function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
     
-    function renderStockDash() {
-        const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
-        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
-        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join('');
-    }
-    
-    function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
-
     function openMaHistory(idx) { 
         const item = db.material[idx]; const h = item.history || []; document.getElementById('modalTitle').innerText = '📋 ' + item.item + ' 상세 이력'; 
         let html = '<table><thead><tr><th>일자</th><th>구분</th><th>수량</th><th width="350">메모 (클릭 시 수정)</th><th>삭제</th></tr></thead><tbody>';
