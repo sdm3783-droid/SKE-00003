@@ -78,20 +78,12 @@
             </div>
         </div>
         <div class="filter-group">
-            <select id="st-month-filter" class="month-filter" onchange="renderStock()">
+            <select id="st-month-filter" class="month-filter" onchange="stFilter={p:'',l:''}; renderStock()">
                 <option value="">📅 전체 기간 (2026~)</option>
-                <option value="2026-01">2026년 01월</option>
-                <option value="2026-02">2026년 02월</option>
-                <option value="2026-03">2026년 03월</option>
-                <option value="2026-04">2026년 04월</option>
-                <option value="2026-05">2026년 05월</option>
-                <option value="2026-06">2026년 06월</option>
-                <option value="2026-07">2026년 07월</option>
-                <option value="2026-08">2026년 08월</option>
-                <option value="2026-09">2026년 09월</option>
-                <option value="2026-10">2026년 10월</option>
-                <option value="2026-11">2026년 11월</option>
-                <option value="2026-12">2026년 12월</option>
+                <option value="2026-01">2026년 01월</option><option value="2026-02">2026년 02월</option><option value="2026-03">2026년 03월</option>
+                <option value="2026-04">2026년 04월</option><option value="2026-05">2026년 05월</option><option value="2026-06">2026년 06월</option>
+                <option value="2026-07">2026년 07월</option><option value="2026-08">2026년 08월</option><option value="2026-09">2026년 09월</option>
+                <option value="2026-10">2026년 10월</option><option value="2026-11">2026년 11월</option><option value="2026-12">2026년 12월</option>
             </select>
             <input type="text" id="st-search" oninput="stFilter={p:'',l:''}; renderStock()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 품목명, 코드, 규격 검색...">
             <button class="btn-bulk-order" onclick="openBulkOrderModal()">📦 발주서 작성</button>
@@ -108,9 +100,7 @@
             <p style="font-size: 13px; color: #64748b;">인쇄 시 자동으로 기록된 발주서 목록입니다.</p>
         </div>
         <table>
-            <thead>
-                <tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr>
-            </thead>
+            <thead><tr><th>발주일자</th><th>업체</th><th>품목 수</th><th>총액 (USD)</th><th>상세보기</th><th>관리</th></tr></thead>
             <tbody id="order-table-body"></tbody>
         </table>
     </div>
@@ -129,48 +119,22 @@
         <div class="filter-group">
             <select id="ma-month-filter" class="month-filter" onchange="renderMaterials()">
                 <option value="">📅 전체 기간 (2026~)</option>
-                <option value="2026-01">2026년 01월</option>
-                <option value="2026-02">2026년 02월</option>
-                <option value="2026-03">2026년 03월</option>
-                <option value="2026-04">2026년 04월</option>
-                <option value="2026-05">2026년 05월</option>
-                <option value="2026-06">2026년 06월</option>
-                <option value="2026-07">2026년 07월</option>
-                <option value="2026-08">2026년 08월</option>
-                <option value="2026-09">2026년 09월</option>
-                <option value="2026-10">2026년 10월</option>
-                <option value="2026-11">2026년 11월</option>
-                <option value="2026-12">2026년 12월</option>
+                <option value="2026-01">2026년 01월</option><option value="2026-02">2026년 02월</option><option value="2026-03">2026년 03월</option>
+                <option value="2026-04">2026년 04월</option><option value="2026-05">2026년 05월</option><option value="2026-06">2026년 06월</option>
+                <option value="2026-07">2026년 07월</option><option value="2026-08">2026년 08월</option><option value="2026-09">2026년 09월</option>
+                <option value="2026-10">2026년 10월</option><option value="2026-11">2026년 11월</option><option value="2026-12">2026년 12월</option>
             </select>
             <input type="text" id="ma-search" oninput="renderMaterials()" style="flex:1; padding:10px; border-radius:8px; border:1px solid #ddd;" placeholder="🔍 프로젝트, 업체명, 자재명 검색...">
         </div>
         <table>
-            <thead>
-                <tr id="ma-header-row">
-                    <th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th width="300">품명 (수정/이력)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th>
-                </tr>
-            </thead>
+            <thead><tr id="ma-header-row"><th>발주일</th><th>발주번호</th><th>프로젝트</th><th>업체</th><th width="300">품명 (수정/이력)</th><th>수령인</th><th>필요</th><th>입고(합계)</th><th>상태</th><th>관리</th></tr></thead>
             <tbody id="ma-table-body"></tbody>
         </table>
     </div>
 </div>
 
-<div id="bulkOrderModal" class="erp-modal">
-    <div class="modal-body">
-        <span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span>
-        <div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (BIZLINK)</div>
-        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;">
-            <div><label>Vendor</label><input type="text" id="blk-vendor" value="BIZLINK" readonly style="background:#e2e8f0;"></div>
-            <div><label>Due Date</label><input type="date" id="blk-date"></div>
-        </div>
-        <table class="blk-table"><thead><tr><th>Item Name</th><th>Spec</th><th width="100">Qty(m)</th><th width="120">Price(USD)</th><th width="40">Del</th></tr></thead><tbody id="bulk-order-list"></tbody></table>
-        <button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print BIZLINK PO & Save History</button>
-    </div>
-</div>
-
-<div id="historyModal" class="erp-modal">
-    <div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div>
-</div>
+<div id="bulkOrderModal" class="erp-modal"><div class="modal-body"><span onclick="closeBulkOrderModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div style="font-weight:900; font-size:20px; margin-bottom:15px; color: #8b5cf6;">📄 Create Purchase Order (BIZLINK)</div><div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px; margin-bottom:15px; background:#f8fafc; padding:15px; border-radius:10px;"><div><label>Vendor</label><input type="text" id="blk-vendor" value="BIZLINK" readonly style="background:#e2e8f0;"></div><div><label>Due Date</label><input type="date" id="blk-date"></div></div><table class="blk-table"><thead><tr><th>Item Name</th><th>Spec</th><th width="100">Qty(m)</th><th width="120">Price(USD)</th><th width="40">Del</th></tr></thead><tbody id="bulk-order-list"></tbody></table><button class="btn-erp" style="width:100%; margin-top:20px; background:#8b5cf6; padding:12px;" onclick="printBulkOrder()">Print BIZLINK PO & Save History</button></div></div>
+<div id="historyModal" class="erp-modal"><div class="modal-body"><span onclick="closeModal()" style="float:right; cursor:pointer; font-size:28px;">&times;</span><div id="modalTitle" style="font-weight:900; font-size:18px; margin-bottom:20px;"></div><div id="history-content"></div></div></div>
 
 <script>
     const STOCK_URL = "https://ske-00003-default-rtdb.firebaseio.com/stock_management.json";
@@ -179,7 +143,7 @@
     const VENDOR_CONTACTS = { "프로텍": "hknoh@protec21.co.kr", "한주하이텍": "sysuk1@hanjoohitech.com", "내비간티스": "hanswoo@navigantis.co" };
 
     let db = { stock: [], material: [], orders: [] };
-    let stFilter = { p: '', l: '' };
+    let stFilter = { p: '', l: '' }; // 카테고리, 레벨(상태) 필터
 
     async function loadStock() { const res = await fetch(STOCK_URL); db.stock = Object.values(await res.json() || {}); renderStockDash(); renderStock(); }
     async function loadMaterials() { const res = await fetch(MATERIAL_URL); db.material = Object.values(await res.json() || {}); renderMaDash(); renderMaterials(); }
@@ -255,8 +219,7 @@
         let type = "입고";
         if(isGoyoung) {
             const selectType = prompt("'입고'는 1번, '출하'는 2번을 입력하세요:", "1");
-            if(selectType === "2") type = "출하";
-            else if(selectType !== "1") return;
+            if(selectType === "2") type = "출하"; else if(selectType !== "1") return;
         }
         const addQtyVal = prompt(`${type}할 수량을 입력하세요:`, "0"); 
         if(addQtyVal !== null && addQtyVal !== "" && !isNaN(addQtyVal)) { 
@@ -264,27 +227,17 @@
             const memoVal = prompt(`${type} 메모를 작성하세요:`, `${type} 완료`); 
             if(memoVal === null) return;
             if(!db.material[idx].history) db.material[idx].history = []; 
-            db.material[idx].history.push({ 
-                date: new Date().toISOString().split('T')[0], 
-                qty: addQty, 
-                memo: memoVal || `${type} 완료`, 
-                ts: Date.now(),
-                type: type
-            }); 
+            db.material[idx].history.push({ date: new Date().toISOString().split('T')[0], qty: addQty, memo: memoVal || `${type} 완료`, ts: Date.now(), type: type }); 
             const h = db.material[idx].history;
             if(isGoyoung) {
                 const totalIn = h.filter(x => x.type !== "출하").reduce((s, x) => s + Number(x.qty), 0);
                 const totalOut = h.filter(x => x.type === "출하").reduce((s, x) => s + Number(x.qty), 0);
                 db.material[idx].inQty = totalIn - totalOut;
-            } else {
-                db.material[idx].inQty = h.reduce((sum, h) => sum + Number(h.qty), 0); 
-            }
-            await saveData('material'); 
-            alert(`${type} 처리가 완료되었습니다.`);
+            } else { db.material[idx].inQty = h.reduce((sum, h) => sum + Number(h.qty), 0); }
+            await saveData('material'); alert(`${type} 처리가 완료되었습니다.`);
         } 
     }
 
-    async function deleteStockHistory(ts) { if(confirm("삭제하시겠습니까?")) { db.stock = db.stock.filter(d => d.timestamp !== ts); await saveData('stock'); closeModal(); } }
     async function saveData(type) { await fetch(type==='stock'?STOCK_URL:MATERIAL_URL, { method: 'PUT', body: JSON.stringify(db[type]) }); type==='stock'?loadStock():loadMaterials(); }
 
     function renderMaterials() {
@@ -292,22 +245,18 @@
         const monthFilter = document.getElementById('ma-month-filter').value;
         const today = new Date();
         document.getElementById('ma-table-body').innerHTML = db.material.sort((a,b)=>b.timestamp-a.timestamp).map((m, idx) => {
-            const rIdx = db.material.indexOf(m);
-            const mDate = m.regDate || m.date;
+            const rIdx = db.material.indexOf(m); const mDate = m.regDate || m.date;
             if(monthFilter && !mDate.startsWith(monthFilter)) return '';
             const searchBase = (m.orderNo || '') + m.vendor + m.project + m.item;
             if(search && !searchBase.toUpperCase().includes(search)) return '';
             const isGoyoung = m.vendor.includes("고영테크놀러지");
-            const req = m.targetQty || 0; 
-            const h = m.history || [];
+            const req = m.targetQty || 0; const h = m.history || [];
             let totalIn = 0, totalOut = 0, currentRemain = 0;
             if(isGoyoung) {
                 totalIn = h.filter(x => x.type !== "출하").reduce((s, x) => s + Number(x.qty), 0);
                 totalOut = h.filter(x => x.type === "출하").reduce((s, x) => s + Number(x.qty), 0);
                 currentRemain = totalIn - totalOut;
-            } else {
-                totalIn = h.length > 0 ? h.reduce((sum, x) => sum + Number(x.qty), 0) : (Number(m.inQty) || 0);
-            }
+            } else { totalIn = h.length > 0 ? h.reduce((sum, x) => sum + Number(x.qty), 0) : (Number(m.inQty) || 0); }
             const isDelay = (totalIn < req) && (today - new Date(mDate)) / (1000 * 60 * 60 * 24) >= 7;
             let badge = totalIn === 0 ? '<span class="badge status-mi">미입고</span>' : (totalIn < req ? '<span class="badge status-part">부분입고</span>' : '<span class="badge status-ok">입고완료</span>');
             let qtyDisplay = isGoyoung ? `<td style="padding:0;"><div style="display:flex; flex-direction:column; font-size:11px; gap:2px; padding:5px; cursor:pointer;" onclick="editMaInQty(${rIdx})"><div style="color:#10b981">입고: ${totalIn.toLocaleString()}</div><div style="color:#ef4444">출하: ${totalOut.toLocaleString()}</div><div style="color:var(--erp-accent); font-weight:900; border-top:1px solid #eee; margin-top:2px;">잔여: ${currentRemain.toLocaleString()}</div></div></td>` : `<td style="color:var(--erp-accent); cursor:pointer; font-weight:900;" onclick="editMaInQty(${rIdx})">${totalIn.toLocaleString()}</td>`;
@@ -330,23 +279,34 @@
         }).join('');
     }
 
+    // --- 통합 재고 관리 렌더링 (필터 로직 수정 완료) ---
     function renderStock() {
         const search = document.getElementById('st-search').value.toUpperCase();
         const monthFilter = document.getElementById('st-month-filter').value;
         const sum = {}; let totalQty = 0;
+
+        // 1. 먼저 데이터를 가공하여 재고 수량을 계산
         db.stock.forEach(d => {
+            // 월별 필터가 있을 때만 날짜 체크
             if(monthFilter && !d.date.startsWith(monthFilter)) return;
+            
             const k = d.item + '|' + d.spec;
             if(!sum[k]) sum[k] = { code: d.code || '-', name: d.item, spec: d.spec, q: 0, p: d.parent || 'CABLE' };
             sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty));
         });
+
+        // 2. 가공된 재고 수량 리스트(sum)를 돌면서 화면 필터링 적용
         const rows = Object.values(sum).filter(s => {
             const lv = getLv(s.q, s.p);
+            // 현황판에서 클릭한 카테고리 필터링
             if(stFilter.p && s.p !== stFilter.p) return false;
+            // 현황판에서 클릭한 상태 버튼(경고/부족 등) 필터링
             if(stFilter.l && lv.t !== stFilter.l) return false;
+            // 검색어 필터링
             if(search && !(s.code + s.name + s.spec).toUpperCase().includes(search)) return false;
             return true;
         });
+
         rows.forEach(r => totalQty += r.q);
         document.getElementById('stock-table-body').innerHTML = rows.map(s => {
             const lv = getLv(s.q, s.p);
@@ -362,6 +322,7 @@
         document.getElementById('historyModal').style.display = 'block'; 
     }
 
+    async function deleteStockHistory(ts) { if(confirm("삭제하시겠습니까?")) { db.stock = db.stock.filter(d => d.timestamp !== ts); await saveData('stock'); closeModal(); } }
     async function addData(type) { const ts = Date.now(); if(type === 'stock') { db.stock.push({ date: document.getElementById('st-date').value, code: document.getElementById('st-code').value, parent: document.getElementById('st-parent').value, item: document.getElementById('st-item').value, spec: document.getElementById('st-spec').value, type: document.getElementById('st-type').value, qty: Number(document.getElementById('st-qty').value), timestamp: ts }); } else { const recvQty = Number(document.getElementById('ma-recv').value); const h = recvQty > 0 ? [{ date: document.getElementById('ma-date').value, qty: recvQty, memo: "최초 등록", ts: ts, type: "입고" }] : []; db.material.push({ regDate: document.getElementById('ma-date').value, orderNo: document.getElementById('ma-order-no').value, project: document.getElementById('ma-project').value, vendor: document.getElementById('ma-vendor').value, item: document.getElementById('ma-item').value, targetQty: Number(document.getElementById('ma-req').value), inQty: recvQty, receiver: document.getElementById('ma-receiver').value, timestamp: ts, history: h }); } await saveData(type); }
     async function deleteData(type, ts) { if(confirm("삭제?")) { db[type] = db[type].filter(d => d.timestamp !== ts); await saveData(type); } }
     function toggleStAll(m) { document.querySelectorAll('.st-chk').forEach(c => c.checked = m.checked); }
@@ -369,7 +330,13 @@
     function closeModal() { document.getElementById('historyModal').style.display = 'none'; }
     function applyMaFilter(v) { document.getElementById('ma-search').value = v; renderMaterials(); }
     function copyRow(t, n, s, p, c, i) { if(t === 'stock') { document.getElementById('st-code').value = c; document.getElementById('st-parent').value = p; document.getElementById('st-item').value = n; document.getElementById('st-spec').value = s; } else { const d = db.material[i]; document.getElementById('ma-order-no').value = d.orderNo; document.getElementById('ma-project').value = d.project; document.getElementById('ma-vendor').value = d.vendor; document.getElementById('ma-item').value = d.item; document.getElementById('ma-req').value = d.targetQty; } window.scrollTo({top:0, behavior:'smooth'}); }
-    function renderStockDash() { const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); }); const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; }); document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join(''); }
+    
+    function renderStockDash() {
+        const sum = {}; db.stock.forEach(d => { const k = d.item + '|' + d.spec; if(!sum[k]) sum[k] = { q: 0, p: d.parent || 'CABLE' }; sum[k].q += (d.type === '출고' ? -Number(d.qty) : Number(d.qty)); });
+        const stats = {}; Object.values(sum).forEach(s => { if(!stats[s.p]) stats[s.p] = { '경고':0, '주의':0, '부족':0, '양호':0 }; stats[s.p][getLv(s.q, s.p).t]++; });
+        document.getElementById('stock-dash').innerHTML = Object.keys(stats).sort().map(p => `<div class="dash-card" onclick="setStFilter('${p}', '')"><span style="font-size:12px; color:#64748b; font-weight:800;">CATEGORY</span><div style="font-size:18px; font-weight:900; margin-bottom:15px;">${p}</div><div class="st-grid"><button class="st-btn" style="background:var(--status-red)" onclick="event.stopPropagation(); setStFilter('${p}','경고')">경고 <span>${stats[p]['경고']}</span></button><button class="st-btn" style="background:var(--status-brown)" onclick="event.stopPropagation(); setStFilter('${p}','주의')">주의 <span>${stats[p]['주의']}</span></button><button class="st-btn" style="background:var(--status-yellow)" onclick="event.stopPropagation(); setStFilter('${p}','부족')">부족 <span>${stats[p]['부족']}</span></button><button class="st-btn" style="background:var(--status-green)" onclick="event.stopPropagation(); setStFilter('${p}','양호')">양호 <span>${stats[p]['양호']}</span></button></div></div>`).join('');
+    }
+    
     function setStFilter(p, l) { stFilter = { p, l }; renderStock(); }
 
     function openMaHistory(idx) { 
